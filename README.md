@@ -1,0 +1,2 @@
+# HandbreakBatchRunner
+Handbreakを使ってバッチ変換するアプリ
