@@ -1,4 +1,4 @@
-# HandbreakBatchRunnerについて
+# HandBrake Batch Runnerについて
 HandbreakCLIを使って動画ファイルをまとめて変換するアプリです。
 
 Handbreakはとても優秀な動画変換ソフトです。
