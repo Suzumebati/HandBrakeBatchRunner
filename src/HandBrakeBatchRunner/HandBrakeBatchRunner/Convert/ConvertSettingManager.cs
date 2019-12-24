@@ -1,4 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization.Json;
 
 namespace HandBrakeBatchRunner.Convert
 {
@@ -10,14 +14,29 @@ namespace HandBrakeBatchRunner.Convert
         /// <summary>
         /// セッティングリスト(Comboboxへバインド用)
         /// </summary>
-        public ObservableCollection<string> ConvertSettingList { get; set; } = new ObservableCollection<string>();
+        public ObservableCollection<ConvertSettingItem> ConvertSettingList { get; set; } = new ObservableCollection<ConvertSettingItem>();
 
         /// <summary>
         /// 変換設定値のファイルロード
         /// </summary>
         public void LoadSettings()
         {
-            //TODO
+            var json = new DataContractJsonSerializer(this.ConvertSettingList.GetType());
+            try
+            {
+                using (var fs = new FileStream(Constant.CONVERT_SETTING_FILE_NAME,
+                                               FileMode.Open, 
+                                               FileAccess.Read, 
+                                               FileShare.ReadWrite,
+                                               64 * 1024))
+                {
+                    this.ConvertSettingList = (ObservableCollection<ConvertSettingItem>)json.ReadObject(fs);
+                }
+            }
+            catch(Exception ex)
+            {
+                // 例外が起こったらロードしない
+            }
         }
 
         /// <summary>
@@ -25,7 +44,22 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         public void SaveSettings()
         {
-            //TODO
+            var json = new DataContractJsonSerializer(this.ConvertSettingList.GetType());
+            try
+            {
+                using (var fs = new FileStream(Constant.CONVERT_SETTING_FILE_NAME,
+                                               FileMode.OpenOrCreate,
+                                               FileAccess.Write,
+                                               FileShare.Read,
+                                               64 * 1024))
+                {
+                    json.WriteObject(fs,this.ConvertSettingList);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 例外が起こったらセーブしない
+            }
         }
 
         /// <summary>
@@ -35,32 +69,27 @@ namespace HandBrakeBatchRunner.Convert
         /// <returns></returns>
         public ConvertSettingItem GetSetting(string convertSettingName)
         {
-            //TODO
-            return null;
+            return this.ConvertSettingList.FirstOrDefault(item => item.ConvertSettingName == convertSettingName);
         }
 
         /// <summary>
-        /// 変換設定情報の取得
+        /// 変換設定情報の設定
         /// </summary>
         /// <param name="convertSettingName">変換設定名</param>
         /// <param name="commandTemplate">コマンドラインのテンプレート</param>
         /// <returns></returns>
-        public void AddSetting(string convertSettingName, string commandTemplate)
+        public void SetSetting(string convertSettingName, string commandTemplate)
         {
-            //TODO
+            var item = this.GetSetting(convertSettingName);
+            if(item == null)
+            {
+                item = new ConvertSettingItem();
+                this.ConvertSettingList.Add(item);
+            }
+            item.ConvertSettingName = convertSettingName;
+            item.CommandLineTemplate = commandTemplate;
         }
-
-        /// <summary>
-        /// 変換設定情報の変更
-        /// </summary>
-        /// <param name="convertSettingName">変換設定名</param>
-        /// <param name="commandTemplate">コマンドラインのテンプレート</param>
-        /// <returns></returns>
-        public void ChangeSetting(string convertSettingName, string commandTemplate)
-        {
-            //TODO
-        }
-
+        
         /// <summary>
         /// 変換設定情報の削除
         /// </summary>
@@ -68,7 +97,11 @@ namespace HandBrakeBatchRunner.Convert
         /// <returns></returns>
         public void DeleteSetting(string convertSettingName)
         {
-            //TODO
+            var item = this.GetSetting(convertSettingName);
+            if (item != null)
+            {
+                this.ConvertSettingList.Remove(item);
+            }
         }
     }
 }
