@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Windows;
+using HandBrakeBatchRunner.Convert;
 
 namespace HandBrakeBatchRunner
 {
@@ -14,6 +15,9 @@ namespace HandBrakeBatchRunner
         public MainWindow()
         {
             InitializeComponent();
+
+            // バインド
+            SettingCombo.ItemsSource = ConvertSettingManager.Current.ConvertSettingList;
         }
 
         #region Event
