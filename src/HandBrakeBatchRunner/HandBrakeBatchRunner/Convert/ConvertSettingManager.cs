@@ -9,8 +9,13 @@ namespace HandBrakeBatchRunner.Convert
     /// <summary>
     /// 変換設定のマネージャクラス
     /// </summary>
-    internal class ConvertSettingManager
+    public class ConvertSettingManager
     {
+        /// <summary>
+        /// インスタンス取得(シングルトン)
+        /// </summary>
+        public static ConvertSettingManager Current { get; } = new ConvertSettingManager();
+
         /// <summary>
         /// セッティングリスト(Comboboxへバインド用)
         /// </summary>

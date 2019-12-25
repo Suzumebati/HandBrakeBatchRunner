@@ -12,11 +12,6 @@ namespace HandBrakeBatchRunner
     public partial class SettingWindow : Window
     {
         /// <summary>
-        /// 設定マネージャ(暫定)
-        /// </summary>
-        private ConvertSettingManager manager = new ConvertSettingManager();
-
-        /// <summary>
         /// コンストラクタ
         /// </summary>
         public SettingWindow()
@@ -24,7 +19,7 @@ namespace HandBrakeBatchRunner
             InitializeComponent();
 
             // リストボックスにバインド
-            this.ConvertSettingListBox.ItemsSource = manager.ConvertSettingList;
+            this.ConvertSettingListBox.ItemsSource = ConvertSettingManager.Current.ConvertSettingList;
         }
 
         /// <summary>
@@ -50,7 +45,7 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void AddSettingButton_Click(object sender, RoutedEventArgs e)
         {
-            manager.SetSetting(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+            ConvertSettingManager.Current.SetSetting(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
         }
 
         /// <summary>
@@ -62,7 +57,8 @@ namespace HandBrakeBatchRunner
         {
             if (this.ConvertSettingListBox.SelectedIndex != -1)
             {
-                manager.DeleteSetting((this.ConvertSettingListBox.SelectedItem as ConvertSettingItem).ConvertSettingName);
+                var selectedSetting = this.ConvertSettingListBox.SelectedItem as ConvertSettingItem;
+                ConvertSettingManager.Current.DeleteSetting(selectedSetting.ConvertSettingName);
             }
         }
 
@@ -75,11 +71,26 @@ namespace HandBrakeBatchRunner
         {
             if (this.ConvertSettingListBox.SelectedIndex != -1)
             {
-                this.CommandTemplateText.Text = (this.ConvertSettingListBox.SelectedItem as ConvertSettingItem).CommandLineTemplate;
+                var selectedSetting = this.ConvertSettingListBox.SelectedItem as ConvertSettingItem;
+                this.CommandTemplateText.Text = selectedSetting.CommandLineTemplate;
             }
             else
             {
                 this.CommandTemplateText.Text = string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 設定更新ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ConvertSettingModify_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.ConvertSettingListBox.SelectedIndex != -1)
+            {
+                var selectedSetting = this.ConvertSettingListBox.SelectedItem as ConvertSettingItem;
+                selectedSetting.CommandLineTemplate = this.CommandTemplateText.Text;
             }
         }
     }
