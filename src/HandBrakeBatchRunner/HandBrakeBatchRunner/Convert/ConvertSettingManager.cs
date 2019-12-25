@@ -53,7 +53,7 @@ namespace HandBrakeBatchRunner.Convert
             try
             {
                 using (var fs = new FileStream(Constant.CONVERT_SETTING_FILE_NAME,
-                                               FileMode.OpenOrCreate,
+                                               FileMode.Create,
                                                FileAccess.Write,
                                                FileShare.Read,
                                                64 * 1024))

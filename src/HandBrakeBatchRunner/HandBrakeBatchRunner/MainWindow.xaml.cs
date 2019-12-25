@@ -15,9 +15,6 @@ namespace HandBrakeBatchRunner
         public MainWindow()
         {
             InitializeComponent();
-
-            // バインド
-            SettingCombo.ItemsSource = ConvertSettingManager.Current.ConvertSettingList;
         }
 
         #region Event
@@ -29,7 +26,22 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            // 設定読込
+            ConvertSettingManager.Current.LoadSettings();
 
+            // バインド
+            SettingCombo.ItemsSource = ConvertSettingManager.Current.ConvertSettingList;
+        }
+
+        /// <summary>
+        /// クローズ中イベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // 設定保存
+            ConvertSettingManager.Current.SaveSettings();
         }
 
         /// <summary>
