@@ -8,31 +8,20 @@ using System.Threading.Tasks;
 namespace HandBrakeBatchRunner.Convert
 {
     /// <summary>
-    /// アウトプットデータ受信イベント引数クラス
-    /// </summary>
-    public class OutputDataReceivedEventArgs : EventArgs
-    {
-        public int Progress;
-        public string ConvertStatus;
-        public string LogData;
-    }
-
-    /// <summary>
     /// 変換コントローラ
     /// </summary>
     public class ConvertController
     {
-        /// <summary>
-        /// アウトプットデータ受信イベントハンドラー
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public delegate void OutputDataReceivedHandler(object sender, OutputDataReceivedEventArgs e);
+        #region "event"
 
         /// <summary>
         /// アウトプットデータイベント
         /// </summary>
         public static event OutputDataReceivedHandler OutputDataReceivedEvent;
+
+        #endregion
+
+        #region "variable"
 
         /// <summary>
         /// キャンセルトークンソース
@@ -43,6 +32,10 @@ namespace HandBrakeBatchRunner.Convert
         /// 標準出力のエンドイベント
         /// </summary>
         private TaskCompletionSource<bool> outputEndEvent = new TaskCompletionSource<bool>();
+
+        #endregion
+               
+        #region "property"
 
         /// <summary>
         /// HandBrakeCLIのファイルパス
@@ -69,6 +62,10 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         public bool IsComplete { get; set; } = false;
 
+        #endregion
+
+        #region "constructor"
+
         /// <summary>
         /// コンストラクタ
         /// </summary>
@@ -77,6 +74,10 @@ namespace HandBrakeBatchRunner.Convert
         {
             HandBrakeCLIFilePath = handBrakeCLIFilePath;
         }
+
+        #endregion
+
+        #region "method"
 
         /// <summary>
         /// 変換実行
@@ -114,6 +115,57 @@ namespace HandBrakeBatchRunner.Convert
         }
 
         /// <summary>
+        /// プロセスからの標準出力・エラー出力を受け取る
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected virtual void OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            // データがnullの場合はプロセスが終了した
+            if (e == null)
+            {
+                outputEndEvent.SetResult(true);
+                return;
+            }
+
+            // データが空の場合は無視
+            if (string.IsNullOrWhiteSpace(e.Data))
+            {
+                return;
+            }
+
+            ConvertStateChangedEventArgs args = new ConvertStateChangedEventArgs
+            {
+                LogData = e.Data
+            };
+
+            // パーセンテージ＋各種情報
+            if (Constant.LOG_PROGRESS_AND_TIME_REGEX.IsMatch(e.Data))
+            {
+                GroupCollection groups = Constant.LOG_PROGRESS_AND_TIME_REGEX.Match(e.Data).Groups;
+                args.Progress = decimal.ToInt32(decimal.Round(decimal.Parse(groups[1].Value)));
+                args.ConvertStatus = groups[2].Value;
+            }
+            // パーセンテージのみ
+            if (Constant.LOG_PROGRESS_REGEX.IsMatch(e.Data))
+            {
+                GroupCollection groups = Constant.LOG_PROGRESS_REGEX.Match(e.Data).Groups;
+                args.Progress = decimal.ToInt32(decimal.Round(decimal.Parse(groups[1].Value)));
+            }
+            // イベントを発行
+            OnOutputDataReceived(args);
+        }
+
+        /// <summary>
+        /// イベントを発生させる
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnOutputDataReceived(ConvertStateChangedEventArgs e)
+        {
+            OutputDataReceivedEvent?.Invoke(this, e);
+        }
+
+        /// <summary>
         /// プロセスを非同期に実行する
         /// </summary>
         /// <param name="proc"></param>
@@ -122,7 +174,7 @@ namespace HandBrakeBatchRunner.Convert
         /// <param name="outputCloseEvent"></param>
         /// <param name="errorCloseEvent"></param>
         /// <returns></returns>
-        public async Task<ProcessResult> ExecuteConvertCommand(Process proc, int timeout)
+        protected virtual async Task<ProcessResult> ExecuteConvertCommand(Process proc, int timeout)
         {
             ProcessResult result = new ProcessResult();
             bool isStarted;
@@ -202,15 +254,19 @@ namespace HandBrakeBatchRunner.Convert
         /// <param name="process"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        private Task<bool> WaitForExitAsync(Process process, int timeout)
+        protected Task<bool> WaitForExitAsync(Process process, int timeout)
         {
             return Task.Run(() => process.WaitForExit(timeout));
         }
 
+        #endregion
+
+        #region "internal class"
+
         /// <summary>
         /// プロセス実行結果
         /// </summary>
-        public class ProcessResult
+        protected class ProcessResult
         {
             /// <summary>
             /// 完了フラグ
@@ -233,56 +289,7 @@ namespace HandBrakeBatchRunner.Convert
             public string ErrorMessage { get; set; } = string.Empty;
         }
 
-        /// <summary>
-        /// プロセスからの標準出力・エラー出力を受け取る
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            // データがnullの場合はプロセスが終了した
-            if (e == null)
-            {
-                outputEndEvent.SetResult(true);
-                return;
-            }
-
-            // データが空の場合は無視
-            if (string.IsNullOrWhiteSpace(e.Data))
-            {
-                return;
-            }
-
-            OutputDataReceivedEventArgs args = new OutputDataReceivedEventArgs
-            {
-                LogData = e.Data
-            };
-
-            // パーセンテージ＋各種情報
-            if (Constant.LOG_PROGRESS_AND_TIME_REGEX.IsMatch(e.Data))
-            {
-                GroupCollection groups = Constant.LOG_PROGRESS_AND_TIME_REGEX.Match(e.Data).Groups;
-                args.Progress = decimal.ToInt32(decimal.Round(decimal.Parse(groups[1].Value)));
-                args.ConvertStatus = groups[2].Value;
-            }
-            // パーセンテージのみ
-            if (Constant.LOG_PROGRESS_REGEX.IsMatch(e.Data))
-            {
-                GroupCollection groups = Constant.LOG_PROGRESS_REGEX.Match(e.Data).Groups;
-                args.Progress = decimal.ToInt32(decimal.Round(decimal.Parse(groups[1].Value)));
-            }
-            // イベントを発行
-            OnOutputDataReceived(args);
-        }
-
-        /// <summary>
-        /// イベントを発生させる
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnOutputDataReceived(OutputDataReceivedEventArgs e)
-        {
-            OutputDataReceivedEvent?.Invoke(this, e);
-        }
+        #endregion
 
     }
 }
