@@ -1,4 +1,4 @@
-﻿using HandBrakeBatchRunner.Convert;
+﻿using HandBrakeBatchRunner.Setting;
 using Microsoft.Win32;
 using System;
 using System.Windows;
@@ -45,7 +45,11 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void AddSettingButton_Click(object sender, RoutedEventArgs e)
         {
-            ConvertSettingManager.Current.SetSetting(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+            if (string.IsNullOrWhiteSpace(NewSettingTextBox.Text) == false && ConvertSettingManager.Current.GetSetting(NewSettingTextBox.Text) == null)
+            {
+                ConvertSettingManager.Current.SetSetting(NewSettingTextBox.Text, string.Empty);
+            }
+            NewSettingTextBox.Text = string.Empty;
         }
 
         /// <summary>

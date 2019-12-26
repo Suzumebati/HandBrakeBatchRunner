@@ -19,14 +19,24 @@ namespace HandBrakeBatchRunner.Convert
     public class ConvertStateChangedEventArgs : EventArgs
     {
         /// <summary>
+        /// 現在のファイルインデックス
+        /// </summary>
+        public int AllProgress { get; set; } = 0;
+
+        /// <summary>
         /// ファイルの進捗パーセント
         /// </summary>
-        public int Progress { get; set; } = 0;
+        public int FileProgress { get; set; } = 0;
 
         /// <summary>
         /// ステータス表示
         /// </summary>
-        public string ConvertStatus { get; set; } = string.Empty;
+        public string AllStatus { get; set; } = string.Empty;
+
+        /// <summary>
+        /// ステータス表示
+        /// </summary>
+        public string FileStatus { get; set; } = string.Empty;
 
         /// <summary>
         /// ログのデータ

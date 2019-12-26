@@ -13,27 +13,36 @@
             <ColumnDefinition Width="100" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="40" />
+            <RowDefinition Height="34" />
             <RowDefinition Height="2*" />
             <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
         <Label Content="HandBrakeCLIパス" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         <TextBox Name="HandBrakeCLIFilePath" Grid.Column="1" Text="" TextWrapping="Wrap" VerticalAlignment="Stretch" Margin="2,2,2,2"/>
-        <Button Content="..." Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" Click="OpenFileButton_Click" Margin="5,0,5,0" Height="30" />
+        <Button Content="..." Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" Click="OpenFileButton_Click" Margin="5,2,5,2" Height="30" />
 
         <Label Content="変換設定名" HorizontalAlignment="Center" Grid.Row="1" VerticalAlignment="Center"/>
-        <ListBox Name="ConvertSettingListBox" Grid.Column="1" Grid.Row="1" VerticalAlignment="Stretch" ItemsSource="{Binding}" Margin="2,2,2,2" SelectionChanged="ConvertSettingListBox_SelectionChanged">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding ConvertSettingName}" TextTrimming="CharacterEllipsis"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <StackPanel Grid.Column="2" Grid.Row="1">
-            <Button Content="追加" Height="30" Margin="5,10,5,5" Click="AddSettingButton_Click" />
-            <Button Content="削除" Height="30" Margin="5,5,5,5" Click="DeleteSettingButton_Click"/>
-        </StackPanel>
-
+        <Grid Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="100"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Name="NewSettingTextBox" Grid.Row="0" Grid.Column="0" Margin="2,2,2,2"/>
+            <ListBox Name="ConvertSettingListBox" VerticalAlignment="Stretch" ItemsSource="{Binding}" Margin="2,2,2,2" SelectionChanged="ConvertSettingListBox_SelectionChanged" Grid.Row="1" Grid.Column="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding ConvertSettingName}" TextTrimming="CharacterEllipsis"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Button Grid.Column="1" Grid.Row="0" Content="追加" Height="30" Margin="5,2,5,2" Click="AddSettingButton_Click" />
+            <Button Grid.Column="1" Grid.Row="1" Content="削除" Height="30" Margin="5,5,5,5" Click="DeleteSettingButton_Click" VerticalAlignment="Top"/>
+        </Grid>
+ 
         <Label Content="変換コマンド" HorizontalAlignment="Center" Grid.Row="2" VerticalAlignment="Center"/>
         <TextBox Name="CommandTemplateText" Grid.Column="1" Grid.Row="2" Text="" TextWrapping="Wrap" AcceptsReturn="True" AutoWordSelection="True" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="2,2,2,2"/>
         <Button Content="更新" Click="ConvertSettingModify_Click" Margin="5,5,5,0" Grid.Column="2" Grid.Row="2" VerticalAlignment="Top" Height="30" />
