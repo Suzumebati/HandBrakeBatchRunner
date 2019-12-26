@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace HandBrakeBatchRunner.Convert
 {
@@ -19,5 +20,20 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         [DataMember]
         public string CommandLineTemplate { get; set; }
+
+        /// <summary>
+        /// コマンドラインパラメータを取得
+        /// </summary>
+        /// <param name="replaceWord"></param>
+        /// <returns></returns>
+        public string GetCommandLineParameter(Dictionary<string, string> replaceWord)
+        {
+            string ret = CommandLineTemplate;
+            foreach (KeyValuePair<string, string> rep in replaceWord)
+            {
+                ret = ret.Replace(rep.Key, rep.Value);
+            }
+            return ret;
+        }
     }
 }
