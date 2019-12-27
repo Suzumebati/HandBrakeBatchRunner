@@ -81,25 +81,33 @@ namespace HandBrakeBatchRunner
             // ドロップされたファイルパスを取得
             var dropFileArray = (string[])e.Data.GetData(DataFormats.FileDrop);
             // ファイルをすべてファイルリストに追加
-            dropFileArray.ToList<string>().ForEach(item => fileListBox.Items.Add(item));
+            dropFileArray.ToList<string>().ForEach(item => SourceFileListBox.Items.Add(item));
         }
                
+        /// <summary>
+        /// 変換開始ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ConvertStart_Click(object sender, RoutedEventArgs e)
         {
-            ConvertStartButton.IsEnabled = false;
-            ConvertCancelButton.IsEnabled = true;
+            // 変換ファイルがない場合は終了
             var setting = SettingCombo.SelectedItem as ConvertSettingItem;
-            if (setting == null)
+            if (setting == null || SourceFileListBox.Items.Count == 0)
             {
                 return;
             }
 
-            runner = new ConvertBatchRunner(fileListBox.Items.OfType<string>().ToList(),
-                                            DstFolderTextBox.Text,
-                                            setting.ConvertSettingName,
-                                            @"C:\soft\HandBrakeCLI-1.2.2-win-x86_64\HandBrakeCLI.exe");
+            // 状態の変更
+            SetButtonStatus(true);
+            SetStatus(0, string.Empty, 0, string.Empty);
 
-            runner.OutputDataReceivedEvent += new OutputDataReceivedHandler(OutputDataReceived);
+            // 変換クラス作成
+            runner = new ConvertBatchRunner(SourceFileListBox.Items.OfType<string>().ToList(),
+                                            DestinationFolderTextBox.Text,
+                                            setting.ConvertSettingName,
+                                            @"timeout.exe");
+            runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(OutputDataReceived);
             
             // 一括変換開始
             var convTask = runner.BatchConvert();
@@ -107,21 +115,26 @@ namespace HandBrakeBatchRunner
             // タスク終了後に画面状態を変更する
             convTask.ContinueWith(task =>
             {
-                this.Dispatcher.Invoke((Action)(() =>
+                SetButtonStatus(false);
+                if (runner !=null && runner.IsCancellationRequested == false)
                 {
-                    ConvertStartButton.IsEnabled = true;
-                    ConvertCancelButton.IsEnabled = false;
-                    AllProgress.Value = 100;
-                    AllStatus.Content = $"{fileListBox.Items.Count}/{fileListBox.Items.Count}";
-                    FileProgress.Value = 100;
-                    FileStatus.Content = "完了";
-                }));
+                    SetStatus(100, $"{SourceFileListBox.Items.Count}/{SourceFileListBox.Items.Count}", 100, "完了");
+                }
+                runner = null;
             });
         }
 
+        /// <summary>
+        /// キャンセルボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ConvertCancelButton_Click(object sender, RoutedEventArgs e)
         {
-            //TODOキャンセルロジック
+            if(runner != null && runner.IsCancellationRequested == false)
+            {
+                runner.CancelConvert();
+            }
         }
 
         /// <summary>
@@ -131,23 +144,31 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         public void OutputDataReceived(object sender, ConvertStateChangedEventArgs e)
         {
-            this.Dispatcher.Invoke((Action)(() =>
-            {
-                AllProgress.Value = e.AllProgress;
-                AllStatus.Content = e.AllStatus;
-                FileProgress.Value = e.FileProgress;
-                FileStatus.Content = e.FileStatus;
-            }));
+            SetStatus(e);
         }
 
+        /// <summary>
+        /// クリアボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ClearFileList_Click(object sender, RoutedEventArgs e)
         {
-
+            SourceFileListBox.Items.Clear();
         }
 
+        /// <summary>
+        /// 削除ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DeleteFile_Click(object sender, RoutedEventArgs e)
         {
-
+            var selectItem = SourceFileListBox.SelectedItem;
+            if (selectItem != null)
+            {
+                SourceFileListBox.Items.Remove(selectItem);
+            }
         }
 
         private void SaveFileList_Click(object sender, RoutedEventArgs e)
@@ -184,7 +205,7 @@ namespace HandBrakeBatchRunner
                 dlg.IsFolderPicker = true;
                 if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
                 {
-                    DstFolderTextBox.Text = dlg.FileName;
+                    DestinationFolderTextBox.Text = dlg.FileName;
                 }
             }
         }
@@ -196,7 +217,7 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void SelectCompleteFolder_Click(object sender, RoutedEventArgs e)
         {
-            using (var dlg = new CommonOpenFileDialog("変換後格納フォルダを選んでください。"))
+            using (var dlg = new CommonOpenFileDialog("変換完了後格納フォルダを選んでください。"))
             {
                 dlg.IsFolderPicker = true;
                 if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
@@ -204,6 +225,70 @@ namespace HandBrakeBatchRunner
                     CompleteFolderTextBox.Text = dlg.FileName;
                 }
             }
+        }
+
+        #endregion
+
+        #region "Method"
+
+        /// <summary>
+        /// ボタン状態を変更する
+        /// </summary>
+        /// <param name="isStart"></param>
+        private void SetButtonStatus(bool isStart)
+        {
+            if (Dispatcher.CheckAccess() == false)
+            {
+                Dispatcher.Invoke((Action)(() =>
+                {
+                    SetButtonStatus(isStart);
+                }));
+                return;
+            }
+
+            if(isStart)
+            {
+                ConvertStartButton.IsEnabled = false;
+                ConvertCancelButton.IsEnabled = true;
+            }
+            else
+            {
+                ConvertStartButton.IsEnabled = true;
+                ConvertCancelButton.IsEnabled = false;
+            }
+        }
+
+        /// <summary>
+        /// イベント引数をもとに状態を変更する
+        /// </summary>
+        /// <param name="e"></param>
+        private void SetStatus(ConvertStateChangedEventArgs e)
+        {
+            SetStatus(e.AllProgress, e.AllStatus, e.FileProgress, e.FileStatus);
+        }
+
+        /// <summary>
+        /// 状態を変更する
+        /// </summary>
+        /// <param name="allProgress"></param>
+        /// <param name="allStatus"></param>
+        /// <param name="fileProgress"></param>
+        /// <param name="fileStatus"></param>
+        private void SetStatus(int allProgress,string allStatus,int fileProgress,string fileStatus)
+        {
+            if(Dispatcher.CheckAccess() == false)
+            {
+                Dispatcher.Invoke((Action)(() =>
+                {
+                    SetStatus(allProgress, allStatus, fileProgress, fileStatus);
+                }));
+                return;
+            }
+
+            AllProgress.Value = allProgress;
+            AllStatus.Content = allStatus;
+            FileProgress.Value = fileProgress;
+            FileStatus.Content = fileStatus;
         }
 
         #endregion
