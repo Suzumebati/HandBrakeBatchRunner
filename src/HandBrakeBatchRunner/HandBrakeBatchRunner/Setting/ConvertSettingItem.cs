@@ -22,7 +22,7 @@ namespace HandBrakeBatchRunner.Setting
         public string CommandLineTemplate { get; set; }
 
         /// <summary>
-        /// コマンドラインパラメータを取得
+        /// HandBrake用のコマンド引数を取得する
         /// </summary>
         /// <param name="replaceWord"></param>
         /// <returns></returns>

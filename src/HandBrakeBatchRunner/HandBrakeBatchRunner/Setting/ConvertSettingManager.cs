@@ -28,7 +28,7 @@ namespace HandBrakeBatchRunner.Setting
             DataContractJsonSerializer json = new DataContractJsonSerializer(ConvertSettingList.GetType());
             try
             {
-                using (FileStream fs = new FileStream(Constant.CONVERT_SETTING_FILE_NAME,
+                using (FileStream fs = new FileStream(Constant.ConvertSettingFileName,
                                                FileMode.Open,
                                                FileAccess.Read,
                                                FileShare.ReadWrite,
@@ -51,7 +51,7 @@ namespace HandBrakeBatchRunner.Setting
             DataContractJsonSerializer json = new DataContractJsonSerializer(ConvertSettingList.GetType());
             try
             {
-                using (FileStream fs = new FileStream(Constant.CONVERT_SETTING_FILE_NAME,
+                using (FileStream fs = new FileStream(Constant.ConvertSettingFileName,
                                                FileMode.Create,
                                                FileAccess.Write,
                                                FileShare.Read,
