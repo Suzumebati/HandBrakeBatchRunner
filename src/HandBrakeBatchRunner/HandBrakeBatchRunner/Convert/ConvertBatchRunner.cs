@@ -9,35 +9,81 @@ namespace HandBrakeBatchRunner.Convert
     /// </summary>
     public class ConvertBatchRunner
     {
+        #region "event"
+
         /// <summary>
-        /// アウトプットデータイベント
+        /// 変換状態変更イベント
         /// </summary>
-        public event OutputDataReceivedHandler OutputDataReceivedEvent;
+        public event ConvertStateChangedHandler ConvertStateChangedEvent;
 
-        public List<string> SourceFileList { get; set; }
-        public string DstFolder { get; set; }
-        public string ConvertSettingName { get; set; }
-        public string CliPath { get; set; }
+        #endregion
 
+        #region "variable"
+
+        /// <summary>
+        /// 変換コントローラ
+        /// </summary>
+        private ConvertProcessController contoller = null;
+
+        /// <summary>
+        /// 現在変換中のファイルインデックス
+        /// </summary>
         private int currentFileIndex = 0;
+
+        #endregion
+
+        #region "property"
+
+        /// <summary>
+        /// 変換元ファイルリスト
+        /// </summary>
+        public List<string> SourceFileList { get; set; }
+
+        /// <summary>
+        /// 変換先フォルダ
+        /// </summary>
+        public string DestinationFolder { get; set; }
+
+        /// <summary>
+        /// 変換設定名
+        /// </summary>
+        public string ConvertSettingName { get; set; }
+
+        /// <summary>
+        /// HandBrakeCLIのファイルパス
+        /// </summary>
+        public string HandBrakeCLIFilePath { get; set; }
+
+        /// <summary>
+        /// キャンセルがリクエストされた
+        /// </summary>
+        public bool IsCancellationRequested { get; set; } = false;
+
+        #endregion
+
+        #region "constructor"
 
         /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="sourceFileList"></param>
-        /// <param name="dstFolder"></param>
+        /// <param name="destinationFolder"></param>
         /// <param name="convertSettingName"></param>
-        /// <param name="cliPath"></param>
+        /// <param name="handBrakeCLIFilePath"></param>
         public ConvertBatchRunner(List<string> sourceFileList,
-                                  string dstFolder,
+                                  string destinationFolder,
                                   string convertSettingName,
-                                  string cliPath)
+                                  string handBrakeCLIFilePath)
         {
             SourceFileList = sourceFileList;
-            DstFolder = dstFolder;
+            DestinationFolder = destinationFolder;
             ConvertSettingName = convertSettingName;
-            CliPath = cliPath;
+            HandBrakeCLIFilePath = handBrakeCLIFilePath;
         }
+
+        #endregion
+
+        #region "method"
 
         /// <summary>
         /// 複数のファイルをバッチで変換実行する
@@ -48,69 +94,97 @@ namespace HandBrakeBatchRunner.Convert
         /// <returns></returns>
         public async Task BatchConvert()
         {
-            ConvertProcessController contoller = new ConvertProcessController(CliPath);
-            contoller.OutputDataReceivedEvent += new OutputDataReceivedHandler(OutputDataReceived);
+            contoller = new ConvertProcessController(HandBrakeCLIFilePath);
+            contoller.ConvertStateChangedEvent += new ConvertStateChangedHandler(ConvertStateChanged);
 
             for (currentFileIndex = 0; currentFileIndex < SourceFileList.Count; currentFileIndex++)
             {
-                string filePath = SourceFileList[currentFileIndex];
+                string currentSourceFilePath = SourceFileList[currentFileIndex];
                 await contoller.ExecuteConvert(ConvertSettingName,
-                                               filePath,
+                                               currentSourceFilePath,
                                                CreateReplaceData(ConvertSettingName,
-                                                                 filePath,
-                                                                 DstFolder));
+                                                                 currentSourceFilePath,
+                                                                 DestinationFolder));
+                if (IsCancellationRequested) break;
             }
 
             // イベントを発行
-            var e = new ConvertStateChangedEventArgs();
-            e.AllProgress = 100;
-            e.AllStatus = $"{SourceFileList.Count}/{SourceFileList.Count}";
-            e.FileProgress = 100;
-            e.FileStatus = string.Empty;
-            OnOutputDataReceived(e);
+            if(IsCancellationRequested == false)
+            {
+                var e = new ConvertStateChangedEventArgs();
+                e.AllProgress = 100;
+                e.AllStatus = $"{SourceFileList.Count}/{SourceFileList.Count}";
+                e.FileProgress = 100;
+                e.FileStatus = string.Empty;
+                OnConvertStateChanged(e);
+            }
         }
+
+        /// <summary>
+        /// 変換をキャンセルする
+        /// </summary>
+        /// <param name="sourceFileList"></param>
+        /// <param name="convertSettingName"></param>
+        /// <param name="cliPath"></param>
+        /// <returns></returns>
+        public void CancelConvert()
+        {
+            if (contoller != null && IsCancellationRequested == false)
+            {
+                contoller.CancelConvert();
+            }
+            IsCancellationRequested = true;
+        }
+        
+        /// <summary>
+        /// パラメータ置換用の辞書を作成する
+        /// </summary>
+        /// <param name="convertSettingName"></param>
+        /// <param name="sourceFilePath"></param>
+        /// <param name="destinationFolder"></param>
+        /// <returns></returns>
+        public Dictionary<string, string> CreateReplaceData(string convertSettingName,
+                                                            string sourceFilePath,
+                                                            string destinationFolder)
+        {
+            Dictionary<string, string> ret = new Dictionary<string, string>
+            {
+                ["{CONVERT_SETTING_NAME}"] = convertSettingName,
+                ["{SOURCE_FILE_PATH}"] = sourceFilePath,
+                ["{SOURCE_FILE_NAME}"] = Path.GetFileName(sourceFilePath),
+                ["{SOURCE_FILE_NAME_WITHOUT_EXTENSION}"] = Path.GetFileNameWithoutExtension(sourceFilePath),
+                ["{DST_FOLDER}"] = destinationFolder
+            };
+            return ret;
+        }
+
+        #endregion
+
+        #region "event"
 
         /// <summary>
         /// コントローラからのイベント受け取り
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OutputDataReceived(object sender, ConvertStateChangedEventArgs e)
+        public void ConvertStateChanged(object sender, ConvertStateChangedEventArgs e)
         {
             // イベントを発行
-            e.AllProgress = (int)currentFileIndex/SourceFileList.Count*100;
+            e.AllProgress = (int)(((double)currentFileIndex / SourceFileList.Count) * 100);
             e.AllStatus = $"{currentFileIndex}/{SourceFileList.Count}";
-            OnOutputDataReceived(e);
+            OnConvertStateChanged(e);
         }
 
         /// <summary>
         /// イベントを発生させる
         /// </summary>
         /// <param name="e"></param>
-        protected virtual void OnOutputDataReceived(ConvertStateChangedEventArgs e)
+        protected virtual void OnConvertStateChanged(ConvertStateChangedEventArgs e)
         {
-            OutputDataReceivedEvent?.Invoke(this, e);
+            ConvertStateChangedEvent?.Invoke(this, e);
         }
 
-        /// <summary>
-        /// パラメータ置換用の辞書を作成する
-        /// </summary>
-        /// <param name="convertSettingName"></param>
-        /// <param name="filePath"></param>
-        /// <returns></returns>
-        public Dictionary<string, string> CreateReplaceData(string convertSettingName,
-                                                            string filePath,
-                                                            string dstFolder)
-        {
-            Dictionary<string, string> ret = new Dictionary<string, string>
-            {
-                ["{CONVERT_SETTING_NAME}"] = convertSettingName,
-                ["{SOURCE_FILE_PATH}"] = filePath,
-                ["{SOURCE_FILE_NAME}"] = Path.GetFileName(filePath),
-                ["{SOURCE_FILE_NAME_WITHOUT_EXTENSION}"] = Path.GetFileNameWithoutExtension(filePath),
-                ["{DST_FOLDER}"] = dstFolder
-            };
-            return ret;
-        }
+        #endregion
+
     }
 }

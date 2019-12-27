@@ -11,7 +11,7 @@ namespace HandBrakeBatchRunner.Convert
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    public delegate void OutputDataReceivedHandler(object sender, ConvertStateChangedEventArgs e);
+    public delegate void ConvertStateChangedHandler(object sender, ConvertStateChangedEventArgs e);
 
     /// <summary>
     /// アウトプットデータ受信イベント引数クラス
@@ -19,22 +19,22 @@ namespace HandBrakeBatchRunner.Convert
     public class ConvertStateChangedEventArgs : EventArgs
     {
         /// <summary>
-        /// 現在のファイルインデックス
+        /// 全体進捗の％
         /// </summary>
         public int AllProgress { get; set; } = 0;
 
         /// <summary>
-        /// ファイルの進捗パーセント
+        /// ファイル進捗の％
         /// </summary>
         public int FileProgress { get; set; } = 0;
 
         /// <summary>
-        /// ステータス表示
+        /// 全体のステータス
         /// </summary>
         public string AllStatus { get; set; } = string.Empty;
 
         /// <summary>
-        /// ステータス表示
+        /// ファイルのステータス
         /// </summary>
         public string FileStatus { get; set; } = string.Empty;
 

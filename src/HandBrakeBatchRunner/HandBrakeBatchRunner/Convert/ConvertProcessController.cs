@@ -18,7 +18,7 @@ namespace HandBrakeBatchRunner.Convert
         /// <summary>
         /// アウトプットデータイベント
         /// </summary>
-        public event OutputDataReceivedHandler OutputDataReceivedEvent;
+        public event ConvertStateChangedHandler ConvertStateChangedEvent;
 
         #endregion
 
@@ -44,24 +44,9 @@ namespace HandBrakeBatchRunner.Convert
         public string HandBrakeCLIFilePath { get; set; }
 
         /// <summary>
-        /// キャンセルフラグ
+        /// 変換ステータス
         /// </summary>
-        public bool IsCancel
-        {
-            set
-            {
-                if (value)
-                {
-                    tokenSource.Cancel();
-                }
-            }
-            get => tokenSource.IsCancellationRequested;
-        }
-
-        /// <summary>
-        /// 完了フラグ
-        /// </summary>
-        public bool IsComplete { get; set; } = false;
+        public Constant.ConvertFileStatus Status { get; set; } = Constant.ConvertFileStatus.NotRuning;
 
         #endregion
 
@@ -109,14 +94,119 @@ namespace HandBrakeBatchRunner.Convert
                 proc.OutputDataReceived += new DataReceivedEventHandler(OutputDataReceived);
                 proc.ErrorDataReceived += new DataReceivedEventHandler(OutputDataReceived);
 
+                Status = Constant.ConvertFileStatus.Running;
+
                 // 非同期実行開始
                 ProcessResult result = await ExecuteConvertCommand(proc, 24 * 60 * 1000);
-                if (result.Status == ProcessResult.CONVERT_STATUS.Completed)
-                {
-                    IsComplete = true;
-                }
+                Status = result.Status;
             }
         }
+
+        /// <summary>
+        /// 変換をキャンセルする
+        /// </summary>
+        public void CancelConvert()
+        {
+            if (tokenSource.IsCancellationRequested == false)
+            {
+                tokenSource.Cancel();
+            }
+        }
+
+        /// <summary>
+        /// プロセスを非同期に実行する
+        /// </summary>
+        /// <param name="proc"></param>
+        /// <param name="timeout"></param>
+        /// <param name="token"></param>
+        /// <param name="outputCloseEvent"></param>
+        /// <param name="errorCloseEvent"></param>
+        /// <returns></returns>
+        protected virtual async Task<ProcessResult> ExecuteConvertCommand(Process proc, int timeout)
+        {
+            ProcessResult result = new ProcessResult();
+            bool isStarted;
+
+            try
+            {
+                // プロセス実行開始
+                isStarted = proc.Start();
+            }
+            catch (Exception error)
+            {
+                result.Status = Constant.ConvertFileStatus.NotRuning;
+                result.ExitCode = -1;
+                result.ErrorMessage = error.Message;
+
+                isStarted = false;
+            }
+
+            if (isStarted)
+            {
+                proc.BeginOutputReadLine();
+                proc.BeginErrorReadLine();
+
+                int runTime = 0;
+                const int waitTime = 1000;
+
+                while (true)
+                {
+                    // 一定時間待つ
+                    bool isExit = await WaitForExitAsync(proc, waitTime);
+                    runTime += waitTime;
+
+                    if (isExit || outputEndEvent.Task.IsCompleted)
+                    {
+                        // プロセスが完了した場合
+                        result.Status = Constant.ConvertFileStatus.Completed;
+                        result.ExitCode = proc.ExitCode;
+                        break;
+                    }
+                    else if (tokenSource.Token.IsCancellationRequested)
+                    {
+                        // キャンセルがされた場合
+                        try
+                        {
+                            proc.Kill();
+                        }
+                        catch { }
+
+                        result.Status = Constant.ConvertFileStatus.Canceled;
+                        break;
+                        //token.ThrowIfCancellationRequested();
+                    }
+                    else if (runTime > timeout)
+                    {
+                        // タイムアウトをオーバーした場合
+                        try
+                        {
+                            proc.Kill();
+                        }
+                        catch { }
+
+                        result.Status = Constant.ConvertFileStatus.TimeOut;
+                        break;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// プロセス完了を非同期に待つ
+        /// </summary>
+        /// <param name="process"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        protected Task<bool> WaitForExitAsync(Process process, int timeout)
+        {
+            return Task.Run(() => process.WaitForExit(timeout));
+        }
+
+        #endregion
+
+        #region "event"
 
         /// <summary>
         /// プロセスからの標準出力・エラー出力を受け取る
@@ -144,16 +234,16 @@ namespace HandBrakeBatchRunner.Convert
             };
 
             // パーセンテージ＋各種情報
-            if (Constant.LOG_PROGRESS_AND_TIME_REGEX.IsMatch(e.Data))
+            if (Constant.RegexLogOutputProgressAndRemain.IsMatch(e.Data))
             {
-                GroupCollection groups = Constant.LOG_PROGRESS_AND_TIME_REGEX.Match(e.Data).Groups;
+                GroupCollection groups = Constant.RegexLogOutputProgressAndRemain.Match(e.Data).Groups;
                 args.FileProgress = decimal.ToInt32(decimal.Round(decimal.Parse(groups[1].Value)));
                 args.FileStatus = groups[2].Value;
             }
             // パーセンテージのみ
-            if (Constant.LOG_PROGRESS_REGEX.IsMatch(e.Data))
+            if (Constant.RegexLogOutputProgress.IsMatch(e.Data))
             {
-                GroupCollection groups = Constant.LOG_PROGRESS_REGEX.Match(e.Data).Groups;
+                GroupCollection groups = Constant.RegexLogOutputProgress.Match(e.Data).Groups;
                 args.FileProgress = decimal.ToInt32(decimal.Round(decimal.Parse(groups[1].Value)));
             }
             // イベントを発行
@@ -161,103 +251,12 @@ namespace HandBrakeBatchRunner.Convert
         }
 
         /// <summary>
-        /// イベントを発生させる
+        /// 変換状態変更イベントを発生させる
         /// </summary>
         /// <param name="e"></param>
         protected virtual void OnOutputDataReceived(ConvertStateChangedEventArgs e)
         {
-            OutputDataReceivedEvent?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// プロセスを非同期に実行する
-        /// </summary>
-        /// <param name="proc"></param>
-        /// <param name="timeout"></param>
-        /// <param name="token"></param>
-        /// <param name="outputCloseEvent"></param>
-        /// <param name="errorCloseEvent"></param>
-        /// <returns></returns>
-        protected virtual async Task<ProcessResult> ExecuteConvertCommand(Process proc, int timeout)
-        {
-            ProcessResult result = new ProcessResult();
-            bool isStarted;
-
-            try
-            {
-                // プロセス実行開始
-                isStarted = proc.Start();
-            }
-            catch (Exception error)
-            {
-                result.Status = ProcessResult.CONVERT_STATUS.NotRuning;
-                result.ExitCode = -1;
-                result.ErrorMessage = error.Message;
-
-                isStarted = false;
-            }
-
-            if (isStarted)
-            {
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
-
-                int runTime = 0;
-                const int waitTime = 1000;
-
-                while (true)
-                {
-                    // 一定時間待つ
-                    bool isExit = await WaitForExitAsync(proc, waitTime);
-                    runTime += waitTime;
-
-                    if (isExit || outputEndEvent.Task.IsCompleted)
-                    {
-                        // プロセスが完了した場合
-                        result.Status = ProcessResult.CONVERT_STATUS.Completed;
-                        result.ExitCode = proc.ExitCode;
-                        break;
-                    }
-                    else if (tokenSource.Token.IsCancellationRequested)
-                    {
-                        // キャンセルがされた場合
-                        try
-                        {
-                            proc.Kill();
-                        }
-                        catch { }
-
-                        result.Status = ProcessResult.CONVERT_STATUS.Canceled;
-                        break;
-                        //token.ThrowIfCancellationRequested();
-                    }
-                    else if (runTime > timeout)
-                    {
-                        // タイムアウトをオーバーした場合
-                        try
-                        {
-                            proc.Kill();
-                        }
-                        catch { }
-
-                        result.Status = ProcessResult.CONVERT_STATUS.TimeOut;
-                        break;
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// プロセス完了を非同期に待つ
-        /// </summary>
-        /// <param name="process"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        protected Task<bool> WaitForExitAsync(Process process, int timeout)
-        {
-            return Task.Run(() => process.WaitForExit(timeout));
+            ConvertStateChangedEvent?.Invoke(this, e);
         }
 
         #endregion
@@ -272,18 +271,7 @@ namespace HandBrakeBatchRunner.Convert
             /// <summary>
             /// 変換ステータス
             /// </summary>
-            public enum CONVERT_STATUS
-            {
-                NotRuning,
-                Canceled,
-                TimeOut,
-                Completed
-            }
-
-            /// <summary>
-            /// 変換ステータス
-            /// </summary>
-            public CONVERT_STATUS Status { get; set; } = CONVERT_STATUS.NotRuning;
+            public Constant.ConvertFileStatus Status { get; set; } = Constant.ConvertFileStatus.NotRuning;
 
             /// <summary>
             /// 終了コード
