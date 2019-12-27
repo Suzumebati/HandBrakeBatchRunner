@@ -20,6 +20,9 @@ namespace HandBrakeBatchRunner
         /// </summary>
         public MainWindow()
         {
+            // 設定読込
+            ConvertSettingManager.Current.LoadSettings();
+            // コンポーネント初期化
             InitializeComponent();
         }
 
@@ -32,9 +35,6 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // 設定読込
-            ConvertSettingManager.Current.LoadSettings();
-
             // バインド
             SettingCombo.ItemsSource = ConvertSettingManager.Current.ConvertSettingList;
         }
@@ -106,7 +106,7 @@ namespace HandBrakeBatchRunner
             runner = new ConvertBatchRunner(SourceFileListBox.Items.OfType<string>().ToList(),
                                             DestinationFolderTextBox.Text,
                                             setting.ConvertSettingName,
-                                            @"timeout.exe");
+                                            ConvertSettingManager.Current.ConvertSettingBody.HandBrakeCLIFilePath);
             runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(OutputDataReceived);
             
             // 一括変換開始

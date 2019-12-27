@@ -1,6 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 
 namespace HandBrakeBatchRunner.Setting
@@ -8,6 +10,7 @@ namespace HandBrakeBatchRunner.Setting
     /// <summary>
     /// 変換設定のマネージャクラス
     /// </summary>
+    [DataContract]
     public class ConvertSettingManager
     {
         /// <summary>
@@ -16,8 +19,15 @@ namespace HandBrakeBatchRunner.Setting
         public static ConvertSettingManager Current { get; } = new ConvertSettingManager();
 
         /// <summary>
+        /// 設定ボディ部
+        /// </summary>
+        [DataMember]
+        public ConvertSettingBody ConvertSettingBody { get; set; } = new ConvertSettingBody();
+
+        /// <summary>
         /// セッティングリスト(Comboboxへバインド用)
         /// </summary>
+        [DataMember]
         public ObservableCollection<ConvertSettingItem> ConvertSettingList { get; set; } = new ObservableCollection<ConvertSettingItem>();
 
         /// <summary>
@@ -25,7 +35,7 @@ namespace HandBrakeBatchRunner.Setting
         /// </summary>
         public void LoadSettings()
         {
-            DataContractJsonSerializer json = new DataContractJsonSerializer(ConvertSettingList.GetType());
+            DataContractJsonSerializer json = new DataContractJsonSerializer(ConvertSettingManager.Current.GetType());
             try
             {
                 using (FileStream fs = new FileStream(Constant.ConvertSettingFileName,
@@ -34,7 +44,9 @@ namespace HandBrakeBatchRunner.Setting
                                                FileShare.ReadWrite,
                                                64 * 1024))
                 {
-                    ConvertSettingList = (ObservableCollection<ConvertSettingItem>)json.ReadObject(fs);
+                    var obj = (ConvertSettingManager)json.ReadObject(fs);
+                    this.ConvertSettingBody = obj.ConvertSettingBody;
+                    this.ConvertSettingList = obj.ConvertSettingList;
                 }
             }
             catch
@@ -48,7 +60,7 @@ namespace HandBrakeBatchRunner.Setting
         /// </summary>
         public void SaveSettings()
         {
-            DataContractJsonSerializer json = new DataContractJsonSerializer(ConvertSettingList.GetType());
+            DataContractJsonSerializer json = new DataContractJsonSerializer(ConvertSettingManager.Current.GetType());
             try
             {
                 using (FileStream fs = new FileStream(Constant.ConvertSettingFileName,
@@ -57,7 +69,7 @@ namespace HandBrakeBatchRunner.Setting
                                                FileShare.Read,
                                                64 * 1024))
                 {
-                    json.WriteObject(fs, ConvertSettingList);
+                    json.WriteObject(fs, this);
                 }
             }
             catch

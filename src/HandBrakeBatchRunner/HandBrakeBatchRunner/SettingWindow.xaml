@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HandBrakeBatchRunner"
         mc:Ignorable="d"
+        xmlns:setting="clr-namespace:HandBrakeBatchRunner.Setting"
+        DataContext="{x:Static setting:ConvertSettingManager.Current}"
         Title="SettingWindow" Height="450" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -18,7 +20,7 @@
             <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
         <Label Content="HandBrakeCLIパス" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        <TextBox Name="HandBrakeCLIFilePath" Grid.Column="1" Text="" TextWrapping="Wrap" VerticalAlignment="Stretch" Margin="2,2,2,2"/>
+        <TextBox Name="HandBrakeCLIFilePath" Grid.Column="1" Text="{Binding ConvertSettingBody.HandBrakeCLIFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" VerticalAlignment="Stretch" Margin="2,2,2,2"/>
         <Button Content="..." Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" Click="OpenFileButton_Click" Margin="5,2,5,2" Height="30" />
 
         <Label Content="変換設定名" HorizontalAlignment="Center" Grid.Row="1" VerticalAlignment="Center"/>

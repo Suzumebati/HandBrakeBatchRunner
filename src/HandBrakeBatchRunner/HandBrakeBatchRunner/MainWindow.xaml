@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HandBrakeBatchRunner"
         mc:Ignorable="d"
+        xmlns:setting="clr-namespace:HandBrakeBatchRunner.Setting"
+        DataContext="{x:Static setting:ConvertSettingManager.Current}"
         Title="HandBrakeBatchRunner" Width="1000" Height="500" Loaded="Window_Loaded" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -33,15 +35,15 @@
         </StackPanel>
 
         <Label Content="変換設定" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="1" Height="30" Width="100"  />
-        <ComboBox Name="SettingCombo" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" ItemsSource="{Binding}" DisplayMemberPath="ConvertSettingName" />
+        <ComboBox Name="SettingCombo" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" ItemsSource="{Binding}" SelectedValue="{Binding ConvertSettingBody.ChoiceConvertSettingName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="ConvertSettingName" SelectedValuePath="ConvertSettingName" />
         <Button Content="変換設定" Grid.Column="2" Margin="5,2,5,2" Grid.Row="1" Click="ConvertSetting_Click" Height="25" />
 
         <Label Content="変換先フォルダ" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="2" Height="30" Width="100"  />
-        <TextBox Name="DestinationFolderTextBox" Grid.Row="2" Text="" TextWrapping="Wrap" VerticalAlignment="Center" Grid.Column="1" Margin="0,2,0,2" Height="26"/>
+        <TextBox Name="DestinationFolderTextBox" Grid.Row="2" Text="{Binding ConvertSettingBody.ChoiceDestinationFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" VerticalAlignment="Center" Grid.Column="1" Margin="0,2,0,2" Height="26" />
         <Button Content="..." Grid.Column="2" HorizontalAlignment="Stretch" Margin="5,2,5,2" Grid.Row="2" VerticalAlignment="Stretch" Click="SelectDstFolder_Click" Height="25"/>
 
         <Label Content="変換完了フォルダ" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="3" Width="100" Height="30"/>
-        <TextBox Name="CompleteFolderTextBox" Grid.Row="3" Text="" TextWrapping="Wrap" VerticalAlignment="Center" Width="auto" Grid.Column="1" Margin="0,2,0,2" Height="26"/>
+        <TextBox Name="CompleteFolderTextBox" Grid.Row="3" Text="{Binding ConvertSettingBody.ChoiceCompleteFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" VerticalAlignment="Center" Width="auto" Grid.Column="1" Margin="0,2,0,2" Height="26"/>
         <Button Content="..." Grid.Column="2" HorizontalAlignment="Stretch" Margin="5,2,5,2" Grid.Row="3" VerticalAlignment="Stretch" Click="SelectCompleteFolder_Click" Height="25"/>
 
         <Label Content="ファイル進捗" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="4" Width="100" Height="30" Margin="-2,0,0,0"  />
