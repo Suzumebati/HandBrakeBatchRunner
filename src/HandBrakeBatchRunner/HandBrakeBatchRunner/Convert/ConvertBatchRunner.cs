@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// GNU LESSER GENERAL PUBLIC LICENSE
+//    Version 3, 29 June 2007
+// copyright twitter suzumebati(@suzumebati5)
+
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -55,6 +59,11 @@ namespace HandBrakeBatchRunner.Convert
         public string HandBrakeCLIFilePath { get; set; }
 
         /// <summary>
+        /// 次でキャンセルがリクエストされた
+        /// </summary>
+        public bool IsCancellationNextRequested { get; set; } = false;
+
+        /// <summary>
         /// キャンセルがリクエストされた
         /// </summary>
         public bool IsCancellationRequested { get; set; } = false;
@@ -88,10 +97,7 @@ namespace HandBrakeBatchRunner.Convert
         /// <summary>
         /// 複数のファイルをバッチで変換実行する
         /// </summary>
-        /// <param name="sourceFileList"></param>
-        /// <param name="convertSettingName"></param>
-        /// <param name="cliPath"></param>
-        /// <returns></returns>
+        /// <returns>非同期タスク</returns>
         public async Task BatchConvert()
         {
             contoller = new ConvertProcessController(HandBrakeCLIFilePath);
@@ -105,11 +111,11 @@ namespace HandBrakeBatchRunner.Convert
                                                CreateReplaceData(ConvertSettingName,
                                                                  currentSourceFilePath,
                                                                  DestinationFolder));
-                if (IsCancellationRequested) break;
+                if (IsCancellationRequested || IsCancellationNextRequested) break;
             }
 
             // イベントを発行
-            if(IsCancellationRequested == false)
+            if(!IsCancellationRequested  && !IsCancellationNextRequested)
             {
                 var e = new ConvertStateChangedEventArgs();
                 e.AllProgress = 100;
@@ -121,12 +127,16 @@ namespace HandBrakeBatchRunner.Convert
         }
 
         /// <summary>
+        /// 次で変換をキャンセルする
+        /// </summary>
+        public void CancelNextConvert()
+        {
+            IsCancellationNextRequested = true;
+        }
+
+        /// <summary>
         /// 変換をキャンセルする
         /// </summary>
-        /// <param name="sourceFileList"></param>
-        /// <param name="convertSettingName"></param>
-        /// <param name="cliPath"></param>
-        /// <returns></returns>
         public void CancelConvert()
         {
             if (contoller != null && IsCancellationRequested == false)
@@ -172,6 +182,7 @@ namespace HandBrakeBatchRunner.Convert
             // イベントを発行
             e.AllProgress = (int)(((double)currentFileIndex / SourceFileList.Count) * 100);
             e.AllStatus = $"{currentFileIndex}/{SourceFileList.Count}";
+            e.SourceFilePath = this.SourceFileList[currentFileIndex];
             OnConvertStateChanged(e);
         }
 

@@ -8,3 +8,7 @@ using System.Windows;
                                               //(used if a resource is not found in the page,
                                               // app, or any theme specific resource dictionaries)
 )]
+
+//[assembly: System.Reflection.AssemblyProductAttribute("HandBrakeBatchRunner")]
+//[assembly: System.Reflection.AssemblyTitleAttribute("HandBrakeBatchRunner")]
+//[assembly: System.Reflection.AssemblyCopyright("@suzumebati5")]

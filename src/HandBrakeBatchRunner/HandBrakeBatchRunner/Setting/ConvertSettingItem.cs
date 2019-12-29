@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// GNU LESSER GENERAL PUBLIC LICENSE
+//    Version 3, 29 June 2007
+// copyright twitter suzumebati(@suzumebati5)
+
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace HandBrakeBatchRunner.Setting

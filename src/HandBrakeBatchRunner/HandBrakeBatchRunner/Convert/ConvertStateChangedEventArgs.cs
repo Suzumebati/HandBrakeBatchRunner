@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// GNU LESSER GENERAL PUBLIC LICENSE
+//    Version 3, 29 June 2007
+// copyright twitter suzumebati(@suzumebati5)
+
+using System;
 
 namespace HandBrakeBatchRunner.Convert
 {
@@ -37,6 +37,11 @@ namespace HandBrakeBatchRunner.Convert
         /// ファイルのステータス
         /// </summary>
         public string FileStatus { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 変換元ファイルパス
+        /// </summary>
+        public string SourceFilePath { get; set; } = string.Empty;
 
         /// <summary>
         /// ログのデータ

@@ -1,4 +1,8 @@
-﻿using HandBrakeBatchRunner.Setting;
+﻿// GNU LESSER GENERAL PUBLIC LICENSE
+//    Version 3, 29 June 2007
+// copyright twitter suzumebati(@suzumebati5)
+
+using HandBrakeBatchRunner.Setting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -118,10 +122,7 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         /// <param name="proc"></param>
         /// <param name="timeout"></param>
-        /// <param name="token"></param>
-        /// <param name="outputCloseEvent"></param>
-        /// <param name="errorCloseEvent"></param>
-        /// <returns></returns>
+        /// <returns>非同期タスク　プロセス実行結果</returns>
         protected virtual async Task<ProcessResult> ExecuteConvertCommand(Process proc, int timeout)
         {
             ProcessResult result = new ProcessResult();

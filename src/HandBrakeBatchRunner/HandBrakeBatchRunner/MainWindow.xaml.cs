@@ -1,10 +1,13 @@
-﻿using System;
+﻿// GNU LESSER GENERAL PUBLIC LICENSE
+//    Version 3, 29 June 2007
+// copyright twitter suzumebati(@suzumebati5)
+
+using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using HandBrakeBatchRunner.Convert;
 using HandBrakeBatchRunner.Setting;
-using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace HandBrakeBatchRunner
@@ -101,14 +104,14 @@ namespace HandBrakeBatchRunner
 
             // 状態の変更
             SetButtonStatus(true);
-            SetStatus(0, string.Empty, 0, string.Empty);
+            SetStatus(0, string.Empty, 0, string.Empty,null);
 
             // 変換クラス作成
             runner = new ConvertBatchRunner(SourceFileListBox.Items.OfType<string>().ToList(),
                                             DestinationFolderTextBox.Text,
                                             setting.ConvertSettingName,
                                             ConvertSettingManager.Current.ConvertSettingBody.HandBrakeCLIFilePath);
-            runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(OutputDataReceived);
+            runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(ConvertStateChanged);
             
             // 一括変換開始
             var convTask = runner.BatchConvert();
@@ -117,12 +120,27 @@ namespace HandBrakeBatchRunner
             convTask.ContinueWith(task =>
             {
                 SetButtonStatus(false);
-                if (runner !=null && runner.IsCancellationRequested == false)
+                if (runner !=null && !runner.IsCancellationRequested && !runner.IsCancellationNextRequested)
                 {
-                    SetStatus(100, $"{SourceFileListBox.Items.Count}/{SourceFileListBox.Items.Count}", 100, "完了");
+                    SetStatus(100, $"{SourceFileListBox.Items.Count}/{SourceFileListBox.Items.Count}", 100, "完了", null);
                 }
                 runner = null;
             });
+        }
+
+        /// <summary>
+        /// 次でキャンセルボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ConvertCancelNextButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (runner != null && runner.IsCancellationNextRequested == false)
+            {
+                runner.CancelNextConvert();
+                ConvertCancelNextButton.IsEnabled = false;
+                ConvertCancelButton.IsEnabled = false;
+            }
         }
 
         /// <summary>
@@ -135,6 +153,7 @@ namespace HandBrakeBatchRunner
             if(runner != null && runner.IsCancellationRequested == false)
             {
                 runner.CancelConvert();
+                ConvertCancelButton.IsEnabled = false;
             }
         }
 
@@ -143,7 +162,7 @@ namespace HandBrakeBatchRunner
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void OutputDataReceived(object sender, ConvertStateChangedEventArgs e)
+        public void ConvertStateChanged(object sender, ConvertStateChangedEventArgs e)
         {
             SetStatus(e);
         }
@@ -242,6 +261,7 @@ namespace HandBrakeBatchRunner
             using (var dlg = new CommonOpenFileDialog("変換ファイル格納フォルダを選んでください。"))
             {
                 dlg.IsFolderPicker = true;
+                if (!string.IsNullOrEmpty(DestinationFolderTextBox.Text)) dlg.InitialDirectory = DestinationFolderTextBox.Text;
                 if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
                 {
                     DestinationFolderTextBox.Text = dlg.FileName;
@@ -259,6 +279,7 @@ namespace HandBrakeBatchRunner
             using (var dlg = new CommonOpenFileDialog("変換完了後格納フォルダを選んでください。"))
             {
                 dlg.IsFolderPicker = true;
+                if(!string.IsNullOrEmpty(CompleteFolderTextBox.Text)) dlg.InitialDirectory = CompleteFolderTextBox.Text;
                 if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
                 {
                     CompleteFolderTextBox.Text = dlg.FileName;
@@ -288,11 +309,13 @@ namespace HandBrakeBatchRunner
             if(isStart)
             {
                 ConvertStartButton.IsEnabled = false;
+                ConvertCancelNextButton.IsEnabled = true;
                 ConvertCancelButton.IsEnabled = true;
             }
             else
             {
                 ConvertStartButton.IsEnabled = true;
+                ConvertCancelNextButton.IsEnabled = false;
                 ConvertCancelButton.IsEnabled = false;
             }
         }
@@ -303,7 +326,7 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void SetStatus(ConvertStateChangedEventArgs e)
         {
-            SetStatus(e.AllProgress, e.AllStatus, e.FileProgress, e.FileStatus);
+            SetStatus(e.AllProgress, e.AllStatus, e.FileProgress, e.FileStatus,e.SourceFilePath);
         }
 
         /// <summary>
@@ -313,21 +336,27 @@ namespace HandBrakeBatchRunner
         /// <param name="allStatus"></param>
         /// <param name="fileProgress"></param>
         /// <param name="fileStatus"></param>
-        private void SetStatus(int allProgress,string allStatus,int fileProgress,string fileStatus)
+        private void SetStatus(int allProgress,string allStatus,int fileProgress,string fileStatus,string sourceFilePath)
         {
             if(Dispatcher.CheckAccess() == false)
             {
                 Dispatcher.Invoke((Action)(() =>
                 {
-                    SetStatus(allProgress, allStatus, fileProgress, fileStatus);
+                    SetStatus(allProgress, allStatus, fileProgress, fileStatus, sourceFilePath);
                 }));
                 return;
             }
 
-            AllProgress.Value = allProgress;
+            if (allProgress != 0) AllProgress.Value = allProgress;
             AllStatus.Content = allStatus;
-            FileProgress.Value = fileProgress;
+            if(fileProgress != 0) FileProgress.Value = fileProgress;
             FileStatus.Content = fileStatus;
+
+            var selectItem = SourceFileListBox.SelectedItem as string;
+            if (sourceFilePath != null && (selectItem == null || selectItem != sourceFilePath))
+            {
+                SourceFileListBox.SelectedItem = sourceFilePath;
+            }
         }
 
         #endregion

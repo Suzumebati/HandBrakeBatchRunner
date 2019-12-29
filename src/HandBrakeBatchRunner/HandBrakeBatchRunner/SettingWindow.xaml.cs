@@ -1,8 +1,13 @@
-﻿using HandBrakeBatchRunner.Setting;
-using Microsoft.Win32;
-using System;
+﻿// GNU LESSER GENERAL PUBLIC LICENSE
+//    Version 3, 29 June 2007
+// copyright twitter suzumebati(@suzumebati5)
+
+using HandBrakeBatchRunner.Setting;
+using Microsoft.WindowsAPICodePack.Dialogs;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+
 namespace HandBrakeBatchRunner
 {
 
@@ -29,12 +34,17 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void OpenFileButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog();
-            dialog.Title = "HandBrakeCLIを選択してください。";
-            dialog.Filter = "実行ファイル(*.exe)|*.exe";
-            if (dialog.ShowDialog() == true)
+             using (var dlg = new CommonOpenFileDialog("HandBrakeCLIを選択してください。"))
             {
-                this.HandBrakeCLIFilePath.Text = dialog.FileName;
+                dlg.Filters.Add(new CommonFileDialogFilter("実行ファイル(*.exe)", "*.exe"));
+                if (!string.IsNullOrWhiteSpace(this.HandBrakeCLIFilePath.Text))
+                {
+                    dlg.InitialDirectory = Path.GetDirectoryName(HandBrakeCLIFilePath.Text);
+                }
+                if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    HandBrakeCLIFilePath.Text = dlg.FileName;
+                }
             }
         }
 

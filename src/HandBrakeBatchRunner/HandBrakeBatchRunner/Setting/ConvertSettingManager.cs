@@ -1,4 +1,7 @@
-﻿using System;
+﻿// GNU LESSER GENERAL PUBLIC LICENSE
+//    Version 3, 29 June 2007
+// copyright twitter suzumebati(@suzumebati5)
+
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
