@@ -10,7 +10,8 @@
         Title="SettingWindow" Height="450" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="120" />
+            <ColumnDefinition Width="6.148" />
+            <ColumnDefinition Width="113.852"/>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="100" />
         </Grid.ColumnDefinitions>
@@ -19,12 +20,12 @@
             <RowDefinition Height="2*" />
             <RowDefinition Height="2*" />
         </Grid.RowDefinitions>
-        <Label Content="HandBrakeCLIパス" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        <TextBox Name="HandBrakeCLIFilePath" Grid.Column="1" Text="{Binding ConvertSettingBody.HandBrakeCLIFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" VerticalAlignment="Stretch" Margin="2,2,2,2"/>
-        <Button Content="..." Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" Click="OpenFileButton_Click" Margin="5,2,5,2" Height="30" />
+        <Label Content="HandBrakeCLIパス" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Column="1" Margin="3,0,0,0"/>
+        <TextBox Name="HandBrakeCLIFilePath" Grid.Column="2" Text="{Binding ConvertSettingBody.HandBrakeCLIFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Margin="2,2,2,2"/>
+        <Button Content="..." Grid.Column="3" VerticalAlignment="Center" Click="OpenFileButton_Click" Margin="5,0,5,0" Height="30" />
 
-        <Label Content="変換設定名" HorizontalAlignment="Center" Grid.Row="1" VerticalAlignment="Center"/>
-        <Grid Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2">
+        <Label Content="変換設定名" HorizontalAlignment="Left" Grid.Row="1" VerticalAlignment="Center" Grid.Column="1" Margin="19,0,0,0"/>
+        <Grid Grid.Column="2" Grid.Row="1" Grid.ColumnSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="34"/>
                 <RowDefinition Height="*"/>
@@ -44,10 +45,10 @@
             <Button Grid.Column="1" Grid.Row="0" Content="追加" Height="30" Margin="5,2,5,2" Click="AddSettingButton_Click" />
             <Button Grid.Column="1" Grid.Row="1" Content="削除" Height="30" Margin="5,5,5,5" Click="DeleteSettingButton_Click" VerticalAlignment="Top"/>
         </Grid>
- 
-        <Label Content="変換コマンド" HorizontalAlignment="Center" Grid.Row="2" VerticalAlignment="Center"/>
-        <TextBox Name="CommandTemplateText" Grid.Column="1" Grid.Row="2" Text="" TextWrapping="Wrap" AcceptsReturn="True" AutoWordSelection="True" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="2,2,2,2"/>
-        <Button Content="更新" Click="ConvertSettingModify_Click" Margin="5,5,5,0" Grid.Column="2" Grid.Row="2" VerticalAlignment="Top" Height="30" />
+
+        <Label Content="変換コマンド" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Center" Grid.Column="1" Margin="20,0,0,0"/>
+        <TextBox Name="CommandTemplateText" Grid.Column="2" Grid.Row="2" Text="" TextWrapping="Wrap" AcceptsReturn="True" AutoWordSelection="True" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="2,2,2,2"/>
+        <Button Content="更新" Click="ConvertSettingModify_Click" Margin="5,5,5,0" Grid.Column="3" Grid.Row="2" VerticalAlignment="Top" Height="30" />
 
     </Grid>
 </Window>

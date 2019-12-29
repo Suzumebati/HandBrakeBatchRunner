@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using HandBrakeBatchRunner.Convert;
@@ -171,14 +172,52 @@ namespace HandBrakeBatchRunner
             }
         }
 
+        /// <summary>
+        /// ファイルリストの保存
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SaveFileList_Click(object sender, RoutedEventArgs e)
         {
-
+            using (var dlg = new CommonSaveFileDialog("ファイルリストの保存先を選んでください。"))
+            {
+                dlg.Filters.Add(new CommonFileDialogFilter("HandBrakeBatchRunner File List", "hfl"));
+                if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    using (var sr= new StreamWriter(dlg.FileName))
+                    {
+                        foreach(string item in SourceFileListBox.Items)
+                        {
+                            sr.WriteLine(item);
+                        }
+                    }
+                }
+            }
         }
 
+        /// <summary>
+        /// ファイルリストの読み込み
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void LoadFileList_Click(object sender, RoutedEventArgs e)
         {
-
+            using (var dlg = new CommonOpenFileDialog("ファイルリストの読込先を選んでください。"))
+            {
+                dlg.Filters.Add(new CommonFileDialogFilter("HandBrakeBatchRunner File List", "hfl"));
+                if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    using (var sr = new StreamReader(dlg.FileName))
+                    {
+                        while (sr.Peek() > -1)
+                        {
+                            var line = sr.ReadLine();
+                            if (string.IsNullOrWhiteSpace(line)) continue;
+                            SourceFileListBox.Items.Add(line);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
