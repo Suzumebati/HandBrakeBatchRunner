@@ -10,45 +10,55 @@
         Title="SettingWindow" Height="450" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="6.148" />
-            <ColumnDefinition Width="113.852"/>
+            <ColumnDefinition Width="110"/>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="100" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="34" />
+            <RowDefinition Height="34" />
             <RowDefinition Height="2*" />
             <RowDefinition Height="2*" />
+            <RowDefinition Height="34" />
         </Grid.RowDefinitions>
-        <Label Content="HandBrakeCLIパス" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Column="1" Margin="3,0,0,0"/>
-        <TextBox Name="HandBrakeCLIFilePath" Grid.Column="2" Text="{Binding ConvertSettingBody.HandBrakeCLIFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Margin="2,2,2,2"/>
-        <Button Content="..." Grid.Column="3" VerticalAlignment="Center" Click="OpenFileButton_Click" Margin="5,0,5,0" Height="30" />
+        <Label Content="HandBrakeCLIパス" Grid.Column="0" VerticalAlignment="Center" Margin="2,0,0,0"/>
+        <TextBox Name="HandBrakeCLIFilePath" Grid.Column="1" Text="{Binding ConvertSettingBody.HandBrakeCLIFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Margin="2,2,2,2"/>
+        <Button Content="..." Grid.Column="2" VerticalAlignment="Center" Click="OpenFileButton_Click" Margin="5,0,5,0" Height="30" />
 
-        <Label Content="変換設定名" HorizontalAlignment="Left" Grid.Row="1" VerticalAlignment="Center" Grid.Column="1" Margin="19,0,0,0"/>
-        <Grid Grid.Column="2" Grid.Row="1" Grid.ColumnSpan="2">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="34"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="100"/>
-            </Grid.ColumnDefinitions>
-            <TextBox Name="NewSettingTextBox" Grid.Row="0" Grid.Column="0" Margin="2,2,2,2"/>
-            <ListBox Name="ConvertSettingListBox" VerticalAlignment="Stretch" ItemsSource="{Binding}" Margin="2,2,2,2" SelectionChanged="ConvertSettingListBox_SelectionChanged" Grid.Row="1" Grid.Column="0">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding ConvertSettingName}" TextTrimming="CharacterEllipsis"/>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            <Button Grid.Column="1" Grid.Row="0" Content="追加" Height="30" Margin="5,2,5,2" Click="AddSettingButton_Click" />
-            <Button Grid.Column="1" Grid.Row="1" Content="削除" Height="30" Margin="5,5,5,5" Click="DeleteSettingButton_Click" VerticalAlignment="Top"/>
-        </Grid>
+        <Label Content="変換追加名" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
+        <TextBox Name="NewSettingTextBox" Grid.Column="1" Grid.Row="1" Margin="2,2,2,2"/>
+        <Button Grid.Column="2" Grid.Row="1" Content="追加" Height="30" Margin="5,2,5,2" Click="AddSettingButton_Click" />
 
-        <Label Content="変換コマンド" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Center" Grid.Column="1" Margin="20,0,0,0"/>
-        <TextBox Name="CommandTemplateText" Grid.Column="2" Grid.Row="2" Text="" TextWrapping="Wrap" AcceptsReturn="True" AutoWordSelection="True" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="2,2,2,2"/>
-        <Button Content="更新" Click="ConvertSettingModify_Click" Margin="5,5,5,0" Grid.Column="3" Grid.Row="2" VerticalAlignment="Top" Height="30" />
+        <Label Content="変換設定名" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
+        <ListBox Name="ConvertSettingListBox" Grid.Column="1" Grid.Row="2" VerticalAlignment="Stretch" ItemsSource="{Binding}" Margin="2,2,2,2" SelectionChanged="ConvertSettingListBox_SelectionChanged" >
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding ConvertSettingName}" TextTrimming="CharacterEllipsis"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Button Content="削除" Grid.Column="2" Grid.Row="2" Height="30" Margin="5,5,5,5" Click="DeleteSettingButton_Click" VerticalAlignment="Top"/>
+
+        <Label Content="変換コマンド" Grid.Column="0" Grid.Row="3" HorizontalAlignment="Stretch"  VerticalAlignment="Center" Margin="2,0,0,0"/>
+        <TextBox Name="CommandTemplateText" Grid.Column="1" Grid.Row="3" Text="" TextWrapping="WrapWithOverflow" AutoWordSelection="True" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="2,2,2,2">
+            <TextBox.ToolTip>
+                <ToolTip>
+                    <TextBlock>
+                        HandBrakeCLIのコマンド引数を設定します。<LineBreak/>
+                        以下の変数を使用可能です。<LineBreak/>
+                        {CONVERT_SETTING_NAME}=選択された変換設定名<LineBreak/>
+                        {SOURCE_FILE_PATH}=選変換元ファイルパス<LineBreak/>
+                        {SOURCE_FILE_NAME}=変換元ファイル名<LineBreak/>
+                        {SOURCE_FILE_NAME_WITHOUT_EXTENSION}=変換元ファイル名(拡張子を除く)<LineBreak/>
+                        {DST_FOLDER}=変換先フォルダパス<LineBreak/>
+                    </TextBlock>
+                </ToolTip>
+            </TextBox.ToolTip>
+        </TextBox>
+        <Button Content="更新" Grid.Column="2" Grid.Row="3" Click="ConvertSettingModify_Click" Margin="5,5,5,0" VerticalAlignment="Top" Height="30" />
+
+        <Label Content="変換後ファイル名" Grid.Column="0" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
+        <TextBox Name="DestinationFileTemplateTextBox" Grid.Column="1" Grid.Row="4" Margin="2,2,2,2"/>
 
     </Grid>
 </Window>

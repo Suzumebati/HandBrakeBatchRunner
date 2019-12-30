@@ -72,14 +72,10 @@ namespace HandBrakeBatchRunner.Convert
         /// <summary>
         /// 変換実行
         /// </summary>
-        /// <param name="convertSettingName"></param>
-        /// <param name="srcFilePath"></param>
-        /// <param name="dstFilePath"></param>
-        public async Task ExecuteConvert(string convertSettingName, string srcFilePath, Dictionary<string, string> replaceParam)
+        /// <param name="setting"></param>
+        /// <param name="replaceParam"></param>
+        public async Task ExecuteConvert(ConvertSettingItem setting, Dictionary<string, string> replaceParam)
         {
-            // 変換設定を取得
-            ConvertSettingItem setting = ConvertSettingManager.Current.GetSetting(convertSettingName);
-
             //Processオブジェクトを作成
             using (Process proc = new Process())
             {
@@ -199,7 +195,7 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         /// <param name="process"></param>
         /// <param name="timeout"></param>
-        /// <returns></returns>
+        /// <returns>非同期タスク</returns>
         protected Task<bool> WaitForExitAsync(Process process, int timeout)
         {
             return Task.Run(() => process.WaitForExit(timeout));

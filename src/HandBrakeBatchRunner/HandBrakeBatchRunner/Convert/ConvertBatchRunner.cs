@@ -2,6 +2,7 @@
 //    Version 3, 29 June 2007
 // copyright twitter suzumebati(@suzumebati5)
 
+using HandBrakeBatchRunner.Setting;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -49,9 +50,19 @@ namespace HandBrakeBatchRunner.Convert
         public string DestinationFolder { get; set; }
 
         /// <summary>
+        /// 完了フォルダ
+        /// </summary>
+        public string CompleteFolder { get; set; }
+
+        /// <summary>
         /// 変換設定名
         /// </summary>
         public string ConvertSettingName { get; set; }
+
+        /// <summary>
+        /// 変換設定
+        /// </summary>
+        public ConvertSettingItem ConvertSetting { get; set; }
 
         /// <summary>
         /// HandBrakeCLIのファイルパス
@@ -77,16 +88,20 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         /// <param name="sourceFileList"></param>
         /// <param name="destinationFolder"></param>
+        /// <param name="completeFolder"></param>
         /// <param name="convertSettingName"></param>
         /// <param name="handBrakeCLIFilePath"></param>
         public ConvertBatchRunner(List<string> sourceFileList,
                                   string destinationFolder,
+                                  string completeFolder,
                                   string convertSettingName,
                                   string handBrakeCLIFilePath)
         {
             SourceFileList = sourceFileList;
             DestinationFolder = destinationFolder;
+            CompleteFolder = completeFolder;
             ConvertSettingName = convertSettingName;
+            ConvertSetting = ConvertSettingManager.Current.GetSetting(convertSettingName);
             HandBrakeCLIFilePath = handBrakeCLIFilePath;
         }
 
@@ -106,11 +121,18 @@ namespace HandBrakeBatchRunner.Convert
             for (currentFileIndex = 0; currentFileIndex < SourceFileList.Count; currentFileIndex++)
             {
                 string currentSourceFilePath = SourceFileList[currentFileIndex];
-                await contoller.ExecuteConvert(ConvertSettingName,
-                                               currentSourceFilePath,
-                                               CreateReplaceData(ConvertSettingName,
-                                                                 currentSourceFilePath,
-                                                                 DestinationFolder));
+                var replaceParam = CreateReplaceParam(ConvertSettingName, currentSourceFilePath, DestinationFolder);
+
+                // 変換先にすでにファイルが有る場合はスキップ
+                if (IsAlreadyExistCompleteFolder(replaceParam)) continue;
+
+                // 一個のファイルを変換する
+                await contoller.ExecuteConvert(ConvertSetting, replaceParam );
+
+                // 完了フォルダに移動
+                MoveCompleteFolder(currentSourceFilePath);
+
+                // キャンセルされていたら中断
                 if (IsCancellationRequested || IsCancellationNextRequested) break;
             }
 
@@ -153,7 +175,7 @@ namespace HandBrakeBatchRunner.Convert
         /// <param name="sourceFilePath"></param>
         /// <param name="destinationFolder"></param>
         /// <returns></returns>
-        public Dictionary<string, string> CreateReplaceData(string convertSettingName,
+        public Dictionary<string, string> CreateReplaceParam(string convertSettingName,
                                                             string sourceFilePath,
                                                             string destinationFolder)
         {
@@ -166,6 +188,41 @@ namespace HandBrakeBatchRunner.Convert
                 ["{DST_FOLDER}"] = destinationFolder
             };
             return ret;
+        }
+
+        /// <summary>
+        /// 既に変換済みフォルダが存在するか確認する
+        /// </summary>
+        /// <param name="filePath"></param>
+        public bool IsAlreadyExistCompleteFolder(Dictionary<string, string> replaceParam)
+        {
+            var dstFileName = ConvertSetting.GetDestinationFileName(replaceParam);
+            if (File.Exists(Path.Combine(DestinationFolder,dstFileName)))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 完了フォルダに移動する
+        /// </summary>
+        /// <param name="filePath"></param>
+        public void MoveCompleteFolder(string currentSourceFilePath)
+        {
+            if (string.IsNullOrWhiteSpace(CompleteFolder))
+            {
+                return;
+            }
+
+            var compFilePath = Path.Combine(CompleteFolder,Path.GetFileName(currentSourceFilePath));
+            if (File.Exists(compFilePath) == false)
+            {
+                File.Move(currentSourceFilePath, compFilePath);
+            }
         }
 
         #endregion

@@ -87,10 +87,12 @@ namespace HandBrakeBatchRunner
             {
                 var selectedSetting = this.ConvertSettingListBox.SelectedItem as ConvertSettingItem;
                 this.CommandTemplateText.Text = selectedSetting.CommandLineTemplate;
+                this.DestinationFileTemplateTextBox.Text = selectedSetting.DestinationFileNameTemplate;
             }
             else
             {
                 this.CommandTemplateText.Text = string.Empty;
+                this.DestinationFileTemplateTextBox.Text = string.Empty;
             }
         }
 
@@ -105,6 +107,7 @@ namespace HandBrakeBatchRunner
             {
                 var selectedSetting = this.ConvertSettingListBox.SelectedItem as ConvertSettingItem;
                 selectedSetting.CommandLineTemplate = this.CommandTemplateText.Text;
+                selectedSetting.DestinationFileNameTemplate = this.DestinationFileTemplateTextBox.Text;
             }
         }
     }

@@ -9,6 +9,7 @@ using System.Windows;
 using HandBrakeBatchRunner.Convert;
 using HandBrakeBatchRunner.Setting;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using Microsoft.WindowsAPICodePack.Taskbar;
 
 namespace HandBrakeBatchRunner
 {
@@ -105,10 +106,12 @@ namespace HandBrakeBatchRunner
             // 状態の変更
             SetButtonStatus(true);
             SetStatus(0, string.Empty, 0, string.Empty,null);
+            TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Normal);
 
             // 変換クラス作成
             runner = new ConvertBatchRunner(SourceFileListBox.Items.OfType<string>().ToList(),
                                             DestinationFolderTextBox.Text,
+                                            CompleteFolderTextBox.Text,
                                             setting.ConvertSettingName,
                                             ConvertSettingManager.Current.ConvertSettingBody.HandBrakeCLIFilePath);
             runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(ConvertStateChanged);
@@ -124,6 +127,7 @@ namespace HandBrakeBatchRunner
                 {
                     SetStatus(100, $"{SourceFileListBox.Items.Count}/{SourceFileListBox.Items.Count}", 100, "完了", null);
                 }
+                TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
                 runner = null;
             });
         }
@@ -347,11 +351,15 @@ namespace HandBrakeBatchRunner
                 return;
             }
 
-            if (allProgress != 0) AllProgress.Value = allProgress;
+            if (allProgress != 0)
+            {
+                AllProgress.Value = allProgress;
+                TaskbarManager.Instance.SetProgressValue(allProgress, 100);
+            }
             AllStatus.Content = allStatus;
             if(fileProgress != 0) FileProgress.Value = fileProgress;
             FileStatus.Content = fileStatus;
-
+            
             var selectItem = SourceFileListBox.SelectedItem as string;
             if (sourceFilePath != null && (selectItem == null || selectItem != sourceFilePath))
             {

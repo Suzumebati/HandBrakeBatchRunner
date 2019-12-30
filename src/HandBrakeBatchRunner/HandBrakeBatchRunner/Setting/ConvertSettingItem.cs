@@ -26,6 +26,12 @@ namespace HandBrakeBatchRunner.Setting
         public string CommandLineTemplate { get; set; }
 
         /// <summary>
+        /// 変換後ファイル名テンプレート
+        /// </summary>
+        [DataMember]
+        public string DestinationFileNameTemplate { get; set; }
+
+        /// <summary>
         /// HandBrake用のコマンド引数を取得する
         /// </summary>
         /// <param name="replaceWord"></param>
@@ -33,6 +39,21 @@ namespace HandBrakeBatchRunner.Setting
         public string GetCommandLineParameter(Dictionary<string, string> replaceWord)
         {
             string ret = CommandLineTemplate;
+            foreach (KeyValuePair<string, string> rep in replaceWord)
+            {
+                ret = ret.Replace(rep.Key, rep.Value);
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// 変換後ファイル名を取得する
+        /// </summary>
+        /// <param name="replaceWord"></param>
+        /// <returns></returns>
+        public string GetDestinationFileName(Dictionary<string, string> replaceWord)
+        {
+            string ret = DestinationFileNameTemplate;
             foreach (KeyValuePair<string, string> rep in replaceWord)
             {
                 ret = ret.Replace(rep.Key, rep.Value);
