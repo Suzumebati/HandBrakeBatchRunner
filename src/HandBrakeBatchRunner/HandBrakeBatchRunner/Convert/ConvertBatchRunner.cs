@@ -5,6 +5,7 @@
 using HandBrakeBatchRunner.Setting;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HandBrakeBatchRunner.Convert
@@ -34,6 +35,11 @@ namespace HandBrakeBatchRunner.Convert
         /// 現在変換中のファイルインデックス
         /// </summary>
         private int currentFileIndex = 0;
+
+        /// <summary>
+        /// 現在変換中のファイル名
+        /// </summary>
+        private string currentFileName;
 
         #endregion
 
@@ -167,7 +173,21 @@ namespace HandBrakeBatchRunner.Convert
             }
             IsCancellationRequested = true;
         }
-        
+
+        /// <summary>
+        /// ファイルリストを変更する
+        /// </summary>
+        /// <param name="sourceFileList"></param>
+        public void ChangeSorceFileList(List<string> sourceFileList)
+        {
+            var index = sourceFileList.IndexOf(currentFileName);
+            if (index != -1 && index != currentFileIndex)
+            {
+                currentFileIndex = index;
+            }
+            this.SourceFileList = sourceFileList;
+        }
+
         /// <summary>
         /// パラメータ置換用の辞書を作成する
         /// </summary>
@@ -175,7 +195,7 @@ namespace HandBrakeBatchRunner.Convert
         /// <param name="sourceFilePath"></param>
         /// <param name="destinationFolder"></param>
         /// <returns></returns>
-        public Dictionary<string, string> CreateReplaceParam(string convertSettingName,
+        protected virtual Dictionary<string, string> CreateReplaceParam(string convertSettingName,
                                                             string sourceFilePath,
                                                             string destinationFolder)
         {
@@ -194,7 +214,7 @@ namespace HandBrakeBatchRunner.Convert
         /// 既に変換済みフォルダが存在するか確認する
         /// </summary>
         /// <param name="filePath"></param>
-        public bool IsAlreadyExistCompleteFolder(Dictionary<string, string> replaceParam)
+        protected virtual bool IsAlreadyExistCompleteFolder(Dictionary<string, string> replaceParam)
         {
             var dstFileName = ConvertSetting.GetDestinationFileName(replaceParam);
             if (File.Exists(Path.Combine(DestinationFolder,dstFileName)))
@@ -211,7 +231,7 @@ namespace HandBrakeBatchRunner.Convert
         /// 完了フォルダに移動する
         /// </summary>
         /// <param name="filePath"></param>
-        public void MoveCompleteFolder(string currentSourceFilePath)
+        protected virtual void MoveCompleteFolder(string currentSourceFilePath)
         {
             if (string.IsNullOrWhiteSpace(CompleteFolder))
             {
@@ -221,7 +241,10 @@ namespace HandBrakeBatchRunner.Convert
             var compFilePath = Path.Combine(CompleteFolder,Path.GetFileName(currentSourceFilePath));
             if (File.Exists(compFilePath) == false)
             {
-                File.Move(currentSourceFilePath, compFilePath);
+                Task.Run(() => {
+                    Thread.Sleep(1000);
+                    File.Move(currentSourceFilePath, compFilePath); 
+                });
             }
         }
 
@@ -234,7 +257,7 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void ConvertStateChanged(object sender, ConvertStateChangedEventArgs e)
+        protected virtual void ConvertStateChanged(object sender, ConvertStateChangedEventArgs e)
         {
             // イベントを発行
             e.AllProgress = (int)(((double)currentFileIndex / SourceFileList.Count) * 100);

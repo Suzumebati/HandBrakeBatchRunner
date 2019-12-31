@@ -24,6 +24,16 @@ namespace HandBrakeBatchRunner
         public readonly static Regex RegexLogOutputProgressAndRemain = new Regex(@"Encoding\: task [0-9]+ of [0-9]+\, ([0-9]+\.[0-9]+) % \([0-9]+\.[0-9]+ fps, avg [0-9]+\.[0-9]+ fps, ETA ([0-9]+h[0-9]+m[0-9]+s)\)");
 
         /// <summary>
+        /// 待ち間隔
+        /// </summary>
+        public readonly static int WaitIntervalMiliSecond = 1000;
+
+        /// <summary>
+        /// 最大待ち時間
+        /// </summary>
+        public readonly static int WaitMiliSecond = 24*60*60*1000;
+
+        /// <summary>
         /// 変換ステータス
         /// </summary>
         public enum ConvertFileStatus

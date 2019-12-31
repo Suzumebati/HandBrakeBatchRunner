@@ -3,6 +3,7 @@
 // copyright twitter suzumebati(@suzumebati5)
 
 using System;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -87,6 +88,12 @@ namespace HandBrakeBatchRunner
             var dropFileArray = (string[])e.Data.GetData(DataFormats.FileDrop);
             // ファイルをすべてファイルリストに追加
             dropFileArray.ToList<string>().ForEach(item => SourceFileListBox.Items.Add(item));
+            SourceFileListBox.ScrollIntoView(dropFileArray.Last<string>());
+
+            if (runner != null)
+            {
+                runner.ChangeSorceFileList(SourceFileListBox.Items.OfType<string>().ToList());
+            }
         }
                
         /// <summary>
@@ -192,6 +199,11 @@ namespace HandBrakeBatchRunner
             if (selectItem != null)
             {
                 SourceFileListBox.Items.Remove(selectItem);
+
+                if (runner != null)
+                {
+                    runner.ChangeSorceFileList(SourceFileListBox.Items.OfType<string>().ToList());
+                }
             }
         }
 
@@ -240,6 +252,10 @@ namespace HandBrakeBatchRunner
                         }
                     }
                 }
+            }
+            if (runner != null)
+            {
+                runner.ChangeSorceFileList(SourceFileListBox.Items.OfType<string>().ToList());
             }
         }
 
@@ -364,6 +380,7 @@ namespace HandBrakeBatchRunner
             if (sourceFilePath != null && (selectItem == null || selectItem != sourceFilePath))
             {
                 SourceFileListBox.SelectedItem = sourceFilePath;
+                SourceFileListBox.ScrollIntoView(sourceFilePath);
             }
         }
 

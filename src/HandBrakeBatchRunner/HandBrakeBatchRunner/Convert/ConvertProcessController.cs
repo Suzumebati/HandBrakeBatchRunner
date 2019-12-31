@@ -97,7 +97,7 @@ namespace HandBrakeBatchRunner.Convert
                 Status = Constant.ConvertFileStatus.Running;
 
                 // 非同期実行開始
-                ProcessResult result = await ExecuteConvertCommand(proc, 24 * 60 * 1000);
+                ProcessResult result = await ExecuteConvertCommand(proc, Constant.WaitMiliSecond);
                 Status = result.Status;
             }
         }
@@ -144,13 +144,12 @@ namespace HandBrakeBatchRunner.Convert
                 proc.BeginErrorReadLine();
 
                 int runTime = 0;
-                const int waitTime = 1000;
 
                 while (true)
                 {
                     // 一定時間待つ
-                    bool isExit = await WaitForExitAsync(proc, waitTime);
-                    runTime += waitTime;
+                    bool isExit = await WaitForExitAsync(proc, Constant.WaitIntervalMiliSecond);
+                    runTime += Constant.WaitIntervalMiliSecond;
 
                     if (isExit || outputEndEvent.Task.IsCompleted)
                     {
