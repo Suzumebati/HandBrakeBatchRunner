@@ -24,7 +24,7 @@
         </Grid.RowDefinitions>
 
         <Label Content="変換ファイル" VerticalAlignment="Center" HorizontalAlignment="Stretch"  />
-        <ListBox Name="SourceFileListBox" Grid.Column="1" AllowDrop="True" DragOver="ListBox_DragOver" Drop="ListBox_Drop" />
+        <ListBox Name="SourceFileListBox" Grid.Column="1" SelectionMode="Multiple" AllowDrop="True" DragOver="ListBox_DragOver" Drop="ListBox_Drop" PreviewKeyDown="SourceFileListBox_KeyDown"/>
         <StackPanel Grid.Column="2">
             <Button Name="ConvertStartButton" Content="変換開始" Height="30" Margin="5,5,5,5" Click="ConvertStart_Click"/>
             <Button Name="ConvertCancelNextButton" Content="次でキャンセル" Height="30" Margin="5,5,5,5" Click="ConvertCancelNextButton_Click" IsEnabled="false"/>

@@ -7,6 +7,7 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Linq;
 
 namespace HandBrakeBatchRunner
 {
@@ -25,6 +26,23 @@ namespace HandBrakeBatchRunner
 
             // リストボックスにバインド
             this.ConvertSettingListBox.ItemsSource = ConvertSettingManager.Current.ConvertSettingList;
+        }
+
+
+        /// <summary>
+        /// フォームクローズ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (ConvertSettingListBox.SelectedIndex != -1)
+            {
+                // 設定が選ばれている場合は設定を保存
+                var selectedSetting = ConvertSettingListBox.SelectedItem as ConvertSettingItem;
+                selectedSetting.CommandLineTemplate = CommandTemplateText.Text;
+                selectedSetting.DestinationFileNameTemplate = DestinationFileTemplateTextBox.Text;
+            }
         }
 
         /// <summary>
@@ -104,33 +122,45 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void ConvertSettingListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (this.ConvertSettingListBox.SelectedIndex != -1)
+            var beforeSelection = e.RemovedItems.OfType<ConvertSettingItem>();
+            var afterSelection = e.AddedItems.OfType<ConvertSettingItem>();
+
+            if (beforeSelection.Any())
             {
-                var selectedSetting = this.ConvertSettingListBox.SelectedItem as ConvertSettingItem;
-                this.CommandTemplateText.Text = selectedSetting.CommandLineTemplate;
-                this.DestinationFileTemplateTextBox.Text = selectedSetting.DestinationFileNameTemplate;
+                if (afterSelection.Any())
+                {
+                    var beforeSetting = beforeSelection.First();
+                    beforeSetting.CommandLineTemplate = CommandTemplateText.Text;
+                    beforeSetting.DestinationFileNameTemplate = DestinationFileTemplateTextBox.Text;
+                    var afterSetting = afterSelection.First();
+                    CommandTemplateText.Text = afterSetting.CommandLineTemplate;
+                    DestinationFileTemplateTextBox.Text = afterSetting.DestinationFileNameTemplate;
+                }
+                else
+                {
+                    var beforeSetting = beforeSelection.First();
+                    beforeSetting.CommandLineTemplate = CommandTemplateText.Text;
+                    beforeSetting.DestinationFileNameTemplate = DestinationFileTemplateTextBox.Text;
+                    CommandTemplateText.Text = string.Empty;
+                    DestinationFileTemplateTextBox.Text = string.Empty;
+                }
             }
             else
             {
-                this.CommandTemplateText.Text = string.Empty;
-                this.DestinationFileTemplateTextBox.Text = string.Empty;
+                if (afterSelection.Any())
+                {
+                    var afterSetting = afterSelection.First();
+                    CommandTemplateText.Text = afterSetting.CommandLineTemplate;
+                    DestinationFileTemplateTextBox.Text = afterSetting.DestinationFileNameTemplate;
+                }
+                else
+                {
+                    CommandTemplateText.Text = string.Empty;
+                    DestinationFileTemplateTextBox.Text = string.Empty;
+                }
+
             }
         }
-
-        /// <summary>
-        /// 設定更新ボタンクリック
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ConvertSettingModify_Click(object sender, RoutedEventArgs e)
-        {
-            if (this.ConvertSettingListBox.SelectedIndex != -1)
-            {
-                var selectedSetting = this.ConvertSettingListBox.SelectedItem as ConvertSettingItem;
-                selectedSetting.CommandLineTemplate = this.CommandTemplateText.Text;
-                selectedSetting.DestinationFileNameTemplate = this.DestinationFileTemplateTextBox.Text;
-            }
-        }
-
+        
     }
 }

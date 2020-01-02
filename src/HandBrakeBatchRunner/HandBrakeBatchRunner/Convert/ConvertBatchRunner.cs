@@ -217,7 +217,12 @@ namespace HandBrakeBatchRunner.Convert
         protected virtual bool IsAlreadyExistCompleteFolder(Dictionary<string, string> replaceParam)
         {
             var dstFileName = ConvertSetting.GetDestinationFileName(replaceParam);
-            if (File.Exists(Path.Combine(DestinationFolder,dstFileName)))
+            if (string.IsNullOrEmpty(dstFileName))
+            {
+                // 変換後ファイル名が指定されていない場合は判断できないので存在しない扱いとする
+                return false;
+            }
+            else if (File.Exists(Path.Combine(DestinationFolder,dstFileName)))
             {
                 return true;
             }

@@ -54,6 +54,11 @@ namespace HandBrakeBatchRunner.Setting
         public string GetDestinationFileName(Dictionary<string, string> replaceWord)
         {
             string ret = DestinationFileNameTemplate;
+            if (string.IsNullOrWhiteSpace(ret))
+            {
+                return null;
+            }
+
             foreach (KeyValuePair<string, string> rep in replaceWord)
             {
                 ret = ret.Replace(rep.Key, rep.Value);

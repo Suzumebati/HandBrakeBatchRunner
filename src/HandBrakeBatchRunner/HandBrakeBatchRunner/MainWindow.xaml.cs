@@ -6,7 +6,9 @@ using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows;
+using System.Windows.Input;
 using HandBrakeBatchRunner.Convert;
 using HandBrakeBatchRunner.FileWatcher;
 using HandBrakeBatchRunner.Setting;
@@ -120,7 +122,53 @@ namespace HandBrakeBatchRunner
                 runner.ChangeSorceFileList(SourceFileListBox.Items.OfType<string>().ToList());
             }
         }
-               
+
+        /// <summary>
+        /// キーダウンイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SourceFileListBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+            {
+                DeleteFile_Click(sender, null);
+            }
+            else if (e.Key == Key.A && (Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.None)
+            {
+                if (SourceFileListBox.SelectedItems.Count > 0)
+                {
+                    SourceFileListBox.SelectedItems.Clear();
+                }
+                else
+                {
+                    SourceFileListBox.SelectAll();
+                }
+            }
+            else if (e.Key == Key.C && (Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.None)
+            {
+                var stb = new StringBuilder();
+                foreach(string item in SourceFileListBox.SelectedItems)
+                {
+                    stb.AppendLine(item);
+                }
+                Clipboard.SetText(stb.ToString());
+            }
+            else if (e.Key == Key.V && (Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.None)
+            {
+                if (Clipboard.ContainsText())
+                {
+                    using (var sr = new StringReader(Clipboard.GetText()))
+                    {
+                        while(sr.Peek() > -1)
+                        {
+                            SourceFileListBox.Items.Add(sr.ReadLine());
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// 変換開始ボタンクリック
         /// </summary>
@@ -128,12 +176,10 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void ConvertStart_Click(object sender, RoutedEventArgs e)
         {
-            // 変換ファイルがない場合は終了
+            // 入力チェック
+            if (InputCheck() == false) return;
+
             var setting = SettingCombo.SelectedItem as ConvertSettingItem;
-            if (setting == null || SourceFileListBox.Items.Count == 0)
-            {
-                return;
-            }
 
             // 状態の変更
             SetButtonStatus(true);
@@ -258,11 +304,11 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void DeleteFile_Click(object sender, RoutedEventArgs e)
         {
-            var selectItem = SourceFileListBox.SelectedItem;
-            if (selectItem != null)
+            var selectItem = SourceFileListBox.SelectedItems.OfType<string>();
+            if (selectItem.Any())
             {
-                SourceFileListBox.Items.Remove(selectItem);
-
+                selectItem.ToList().ForEach((item) => SourceFileListBox.Items.Remove(item));
+                
                 if (runner != null)
                 {
                     runner.ChangeSorceFileList(SourceFileListBox.Items.OfType<string>().ToList());
@@ -448,12 +494,46 @@ namespace HandBrakeBatchRunner
             if (fileProgress != 0) FileProgress.Value = fileProgress;
             if (fileStatus != null) FileStatus.Content = fileStatus;
             
-            var selectItem = SourceFileListBox.SelectedItem as string;
-            if (!string.IsNullOrWhiteSpace(sourceFilePath) && (selectItem == null || selectItem != sourceFilePath))
+            var selectItems = SourceFileListBox.SelectedItems.OfType<string>();
+            if (!string.IsNullOrWhiteSpace(sourceFilePath) && (selectItems.Count() != 1 || selectItems.First() != sourceFilePath))
             {
+                SourceFileListBox.SelectedItems.Clear();
                 SourceFileListBox.SelectedItem = sourceFilePath;
                 SourceFileListBox.ScrollIntoView(sourceFilePath);
             }
+        }
+
+        /// <summary>
+        /// 変換に必要な入力項目のチェック
+        /// </summary>
+        /// <returns></returns>
+        private bool InputCheck()
+        {
+            if (SourceFileListBox.Items.Count == 0)
+            {
+                MessageBox.Show("変換ファイルが指定されていません。", "HandBrakeBatchRunner", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if (SettingCombo.SelectedItem == null)
+            {
+                MessageBox.Show("変換設定が選ばれていません。", "HandBrakeBatchRunner", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;   
+            }
+            
+            if (string.IsNullOrWhiteSpace(DestinationFolderTextBox.Text))
+            {
+                MessageBox.Show("変換先フォルダが選択されていません。", "HandBrakeBatchRunner", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            if ( File.Exists(settingManager.ConvertSettingBody.HandBrakeCLIFilePath) == false )
+            {
+                MessageBox.Show("HandbrakeCLIファイルが見つかりません。\r\n別途ダウンロードして任意の場所に格納します。格納した変換設定でHandbrakeCLIを指定してください。", "HandBrakeBatchRunner", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            return true;
         }
 
         #endregion
