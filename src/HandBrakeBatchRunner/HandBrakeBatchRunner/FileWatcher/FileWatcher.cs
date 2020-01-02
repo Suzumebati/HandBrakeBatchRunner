@@ -35,7 +35,7 @@ namespace HandBrakeBatchRunner.FileWatcher
         /// <summary>
         /// 追加ファイルリスト
         /// </summary>
-        private readonly List<string> checkFilePath = new List<string>();
+        private readonly List<string> checkFilePathList = new List<string>();
 
         /// <summary>
         /// 停止フラグ
@@ -64,6 +64,7 @@ namespace HandBrakeBatchRunner.FileWatcher
             watcher.EnableRaisingEvents = true;
 
             IsWatch = true;
+            stopping = false;
         }
 
         /// <summary>
@@ -75,6 +76,7 @@ namespace HandBrakeBatchRunner.FileWatcher
             if (watcher != null)
             {
                 watcher.Dispose();
+                watcher = null;
             }
             if(checkThread != null)
             {
@@ -90,32 +92,36 @@ namespace HandBrakeBatchRunner.FileWatcher
         {
             while (true)
             {
+                // 1秒待ち合わせ(キャンセル受付)
                 if (stopping) return;
                 Thread.Sleep(1000);
                 if (stopping) return;
-                if (checkFilePath.Count == 0) continue;
 
-                var createFilePath = new List<string>();
-                var delList = new List<string>();
+                // 新規ファイルが来ていない場合は何もしない
+                if (checkFilePathList.Count == 0) continue;
+
+                var addFilePathList = new List<string>();
+                var delCheckFilePathList = new List<string>();
                 lock (lockObj)
                 {
-                    foreach (string filePath in checkFilePath)
+                    foreach (string filePath in checkFilePathList)
                     {
                         // 書き込みオープンで開けるか(ほかソフトの書き込みがおわったかチェック)
                         if (CanWrite(filePath))
                         {
-                            createFilePath.Add(filePath);
-                            delList.Add(filePath);
+                            addFilePathList.Add(filePath);
+                            delCheckFilePathList.Add(filePath);
                         }
                     }
-                    delList.ForEach(item => checkFilePath.Remove(item));
+                    // 追加可能となったものはチェック対象から削除
+                    delCheckFilePathList.ForEach(item => checkFilePathList.Remove(item));
                 }
 
                 // ファイル追加イベント発行
-                if (createFilePath.Count > 0)
+                if (addFilePathList.Count > 0)
                 {
                     var e = new FileAddedEventArgs();
-                    e.FileList = createFilePath;
+                    e.FileList = addFilePathList;
                     OnFileAdded(e);
                 }
             }
@@ -150,9 +156,9 @@ namespace HandBrakeBatchRunner.FileWatcher
         {
             lock(lockObj)
             {
-                if (checkFilePath.IndexOf(e.FullPath) == -1)
+                if (checkFilePathList.IndexOf(e.FullPath) == -1)
                 {
-                    checkFilePath.Add(e.FullPath);
+                    checkFilePathList.Add(e.FullPath);
                 }
             }
         }

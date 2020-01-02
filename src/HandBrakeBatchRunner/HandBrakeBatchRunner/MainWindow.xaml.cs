@@ -77,8 +77,8 @@ namespace HandBrakeBatchRunner
             // 設定保存
             settingManager.SaveSettings();
 
+            // フォルダ監視の終了
             watcher.Dispose();
-
         }
 
         /// <summary>
