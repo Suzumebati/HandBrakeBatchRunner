@@ -137,7 +137,7 @@ namespace HandBrakeBatchRunner
 
             // 状態の変更
             SetButtonStatus(true);
-            SetStatus(0, string.Empty, 0, string.Empty,null);
+            SetStatus(0, string.Empty, 0, string.Empty,string.Empty);
             TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Normal);
 
             // 変換クラス作成
@@ -157,7 +157,7 @@ namespace HandBrakeBatchRunner
                 SetButtonStatus(false);
                 if (runner !=null && !runner.IsCancellationRequested && !runner.IsCancellationNextRequested)
                 {
-                    SetStatus(100, $"{SourceFileListBox.Items.Count}/{SourceFileListBox.Items.Count}", 100, "完了", null);
+                    SetStatus(100, $"{SourceFileListBox.Items.Count}/{SourceFileListBox.Items.Count}", 100, "完了", string.Empty);
                 }
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
                 runner = null;
@@ -444,12 +444,12 @@ namespace HandBrakeBatchRunner
                 AllProgress.Value = allProgress;
                 TaskbarManager.Instance.SetProgressValue(allProgress, 100);
             }
-            AllStatus.Content = allStatus;
-            if(fileProgress != 0) FileProgress.Value = fileProgress;
-            FileStatus.Content = fileStatus;
+            if (allStatus !=null) AllStatus.Content = allStatus;
+            if (fileProgress != 0) FileProgress.Value = fileProgress;
+            if (fileStatus != null) FileStatus.Content = fileStatus;
             
             var selectItem = SourceFileListBox.SelectedItem as string;
-            if (sourceFilePath != null && (selectItem == null || selectItem != sourceFilePath))
+            if (!string.IsNullOrWhiteSpace(sourceFilePath) && (selectItem == null || selectItem != sourceFilePath))
             {
                 SourceFileListBox.SelectedItem = sourceFilePath;
                 SourceFileListBox.ScrollIntoView(sourceFilePath);

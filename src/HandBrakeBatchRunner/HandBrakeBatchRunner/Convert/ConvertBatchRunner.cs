@@ -149,7 +149,7 @@ namespace HandBrakeBatchRunner.Convert
                 e.AllProgress = 100;
                 e.AllStatus = $"{SourceFileList.Count}/{SourceFileList.Count}";
                 e.FileProgress = 100;
-                e.FileStatus = string.Empty;
+                e.FileStatus = "完了";
                 OnConvertStateChanged(e);
             }
         }

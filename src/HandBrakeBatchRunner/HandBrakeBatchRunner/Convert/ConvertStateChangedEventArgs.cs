@@ -31,21 +31,21 @@ namespace HandBrakeBatchRunner.Convert
         /// <summary>
         /// 全体のステータス
         /// </summary>
-        public string AllStatus { get; set; } = string.Empty;
+        public string AllStatus { get; set; } = null;
 
         /// <summary>
         /// ファイルのステータス
         /// </summary>
-        public string FileStatus { get; set; } = string.Empty;
+        public string FileStatus { get; set; } = null;
 
         /// <summary>
         /// 変換元ファイルパス
         /// </summary>
-        public string SourceFilePath { get; set; } = string.Empty;
+        public string SourceFilePath { get; set; } = null;
 
         /// <summary>
         /// ログのデータ
         /// </summary>
-        public string LogData { get; set; } = string.Empty;
+        public string LogData { get; set; } = null;
     }
 }
