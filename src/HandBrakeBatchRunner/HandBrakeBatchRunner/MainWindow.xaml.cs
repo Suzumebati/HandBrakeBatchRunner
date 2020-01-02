@@ -215,12 +215,30 @@ namespace HandBrakeBatchRunner
                 Dispatcher.Invoke((Action)(() =>
                 {
                     FileAdded(sender,e);
-                    return;
                 }));
+                return;
             }
 
-            e.FileList.ForEach(item => SourceFileListBox.Items.Add(item));
-            SourceFileListBox.ScrollIntoView(e.FileList.Last());
+            if (settingManager.ConvertSettingBody.EnableAutoAdd)
+            {
+                // 自動追加が有効な場合はファイルリストに追加
+                e.FileList.ForEach(item => SourceFileListBox.Items.Add(item));
+                SourceFileListBox.ScrollIntoView(e.FileList.Last());
+            }
+
+            if (runner == null)
+            {
+                if (settingManager.ConvertSettingBody.EnableAutoConvert)
+                {
+                    // 変換中でないかつ、自動実行が有効な場合は変換スタート
+                    ConvertStart_Click(this, null);
+                }
+            }
+            else
+            {
+                // 既に変換中の場合はリストを更新
+                runner.ChangeSorceFileList(SourceFileListBox.Items.OfType<string>().ToList());
+            }
         }
 
         /// <summary>
