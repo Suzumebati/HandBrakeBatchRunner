@@ -49,6 +49,27 @@ namespace HandBrakeBatchRunner
         }
 
         /// <summary>
+        /// 監視フォルダ選択ボタンクリックイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void WatchFolderButton_Click(object sender, RoutedEventArgs e)
+        {
+            using (var dlg = new CommonOpenFileDialog("HandBrakeCLIを選択してください。"))
+            {
+                dlg.IsFolderPicker = true;
+                if (!string.IsNullOrWhiteSpace(this.WatchFolderTextBox.Text))
+                {
+                    dlg.InitialDirectory = Path.GetDirectoryName(WatchFolderTextBox.Text);
+                }
+                if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    WatchFolderTextBox.Text = dlg.FileName;
+                }
+            }
+        }
+
+        /// <summary>
         /// 設定追加ボタンクリック
         /// </summary>
         /// <param name="sender"></param>
@@ -110,5 +131,6 @@ namespace HandBrakeBatchRunner
                 selectedSetting.DestinationFileNameTemplate = this.DestinationFileTemplateTextBox.Text;
             }
         }
+
     }
 }

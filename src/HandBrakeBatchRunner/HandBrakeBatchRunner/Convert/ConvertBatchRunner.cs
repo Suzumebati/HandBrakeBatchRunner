@@ -39,7 +39,7 @@ namespace HandBrakeBatchRunner.Convert
         /// <summary>
         /// 現在変換中のファイル名
         /// </summary>
-        private string currentFileName;
+        private string currentFileName = string.Empty;
 
         #endregion
 

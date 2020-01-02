@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using HandBrakeBatchRunner.Convert;
+using HandBrakeBatchRunner.FileWatcher;
 using HandBrakeBatchRunner.Setting;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Microsoft.WindowsAPICodePack.Taskbar;
@@ -19,7 +20,20 @@ namespace HandBrakeBatchRunner
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// バッチ変換クラス
+        /// </summary>
         private ConvertBatchRunner runner;
+
+        /// <summary>
+        /// 設定マネージャ
+        /// </summary>
+        private ConvertSettingManager settingManager = ConvertSettingManager.Current;
+        
+        /// <summary>
+        /// 監視クラス
+        /// </summary>
+        private ConvertFileWatcher watcher = new ConvertFileWatcher();
 
         /// <summary>
         /// コンストラクタ
@@ -27,7 +41,7 @@ namespace HandBrakeBatchRunner
         public MainWindow()
         {
             // 設定読込
-            ConvertSettingManager.Current.LoadSettings();
+            settingManager.LoadSettings();
             // コンポーネント初期化
             InitializeComponent();
         }
@@ -42,7 +56,15 @@ namespace HandBrakeBatchRunner
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // バインド
-            SettingCombo.ItemsSource = ConvertSettingManager.Current.ConvertSettingList;
+            SettingCombo.ItemsSource = settingManager.ConvertSettingList;
+
+            // 監視フォルダ機能の有効化
+            watcher.FileAddedEvent += new FileAddedHandler(FileAdded);
+            if (settingManager.ConvertSettingBody.EnableAutoAdd &&
+                string.IsNullOrWhiteSpace(settingManager.ConvertSettingBody.WatchFolder) == false)
+            {
+                watcher.Start(settingManager.ConvertSettingBody.WatchFolder, settingManager.ConvertSettingBody.WatchPattern);
+            }
         }
 
         /// <summary>
@@ -53,7 +75,10 @@ namespace HandBrakeBatchRunner
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // 設定保存
-            ConvertSettingManager.Current.SaveSettings();
+            settingManager.SaveSettings();
+
+            watcher.Dispose();
+
         }
 
         /// <summary>
@@ -120,7 +145,7 @@ namespace HandBrakeBatchRunner
                                             DestinationFolderTextBox.Text,
                                             CompleteFolderTextBox.Text,
                                             setting.ConvertSettingName,
-                                            ConvertSettingManager.Current.ConvertSettingBody.HandBrakeCLIFilePath);
+                                            settingManager.ConvertSettingBody.HandBrakeCLIFilePath);
             runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(ConvertStateChanged);
             
             // 一括変換開始
@@ -176,6 +201,26 @@ namespace HandBrakeBatchRunner
         public void ConvertStateChanged(object sender, ConvertStateChangedEventArgs e)
         {
             SetStatus(e);
+        }
+
+        /// <summary>
+        /// ファイル追加イベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void FileAdded(object sender, FileAddedEventArgs e)
+        {
+            if (Dispatcher.CheckAccess() == false)
+            {
+                Dispatcher.Invoke((Action)(() =>
+                {
+                    FileAdded(sender,e);
+                    return;
+                }));
+            }
+
+            e.FileList.ForEach(item => SourceFileListBox.Items.Add(item));
+            SourceFileListBox.ScrollIntoView(e.FileList.Last());
         }
 
         /// <summary>
@@ -269,6 +314,15 @@ namespace HandBrakeBatchRunner
             // 設定ウインドウをモーダル表示する
             var win = new SettingWindow();
             win.ShowDialog();
+
+            if(watcher.IsWatch && !settingManager.ConvertSettingBody.EnableAutoAdd)
+            {
+                watcher.Stop();
+            }
+            else if(!watcher.IsWatch && settingManager.ConvertSettingBody.EnableAutoAdd)
+            {
+                watcher.Start(settingManager.ConvertSettingBody.WatchFolder, settingManager.ConvertSettingBody.WatchPattern);
+            }
         }
 
         /// <summary>

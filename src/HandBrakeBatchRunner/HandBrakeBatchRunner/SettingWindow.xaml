@@ -20,6 +20,9 @@
             <RowDefinition Height="2*" />
             <RowDefinition Height="2*" />
             <RowDefinition Height="34" />
+            <RowDefinition Height="34" />
+            <RowDefinition Height="34" />
+            <RowDefinition Height="34" />
         </Grid.RowDefinitions>
         <Label Content="HandBrakeCLIパス" Grid.Column="0" VerticalAlignment="Center" Margin="2,0,0,0"/>
         <TextBox Name="HandBrakeCLIFilePath" Grid.Column="1" Text="{Binding ConvertSettingBody.HandBrakeCLIFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Margin="2,2,2,2"/>
@@ -59,6 +62,22 @@
 
         <Label Content="変換後ファイル名" Grid.Column="0" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
         <TextBox Name="DestinationFileTemplateTextBox" Grid.Column="1" Grid.Row="4" Margin="2,2,2,2"/>
+
+        <Label Content="監視フォルダ" Grid.Column="0" Grid.Row="5" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
+        <TextBox Name="WatchFolderTextBox" Grid.Column="1" Grid.Row="5" Margin="2,2,2,2" Text="{Binding ConvertSettingBody.WatchFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        <Button Content="..." Grid.Column="2" Grid.Row="5" VerticalAlignment="Center" Click="WatchFolderButton_Click" Margin="5,0,5,0" Height="30" />
+
+        <Label Content="監視フォルパターン" Grid.Column="0" Grid.Row="6" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
+        <TextBox Name="WatchFilePatternTextBox" Text="{Binding ConvertSettingBody.WatchPattern, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Grid.Row="6" Margin="2,2,2,2"/>
+        
+        <StackPanel Orientation="Horizontal" Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="3">
+            <CheckBox Margin="10,2,10,2" VerticalAlignment="Center" IsChecked="{Binding ConvertSettingBody.EnableAutoAdd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                監視フォルダのファイルを自動で追加する
+            </CheckBox>
+            <CheckBox Margin="10,2,10,2" VerticalAlignment="Center" IsChecked="{Binding ConvertSettingBody.EnableAutoConvert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                ファイル追加時に自動で変換を実行する
+            </CheckBox>
+        </StackPanel>
 
     </Grid>
 </Window>
