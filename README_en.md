@@ -5,19 +5,21 @@ Handbreak is a very good video converter. However, it is a little inconvenient w
 
 I made it with VB.NET + WinForm for personal use, but I want to study, so I will make it again with .NET Core + WPF.
 
-# current situation
-12/12/2019 github repository creation.  
-12/20/2019 I created a project.  
-12/20/2019 WPF only window design , and I will manage the implementation schedule and completion there  
+# How to use
+![operation](https://user-images.githubusercontent.com/51582636/71642448-a331a600-2cee-11ea-9957-fcb2422b36db.gif)
+1. Convert settings etc. first (change the command template of HandbrakeCLI)
+2. Set file conversion destination
+3. Drag and drop the files you want to convert
+4. Click Start Conversion
 
-# Planned to be implemented
-* HandbreakCLI command line options can be saved and selected during conversion
-* Multiple files can be specified by drag and drop
-* Move to a specific folder after conversion + Check file with same name (prevents second conversion)
-* Progress display
-* Waiting for conversion completion at multiple startups
+# Useful function
+* If you specify the conversion completed folder, the converted file will be moved
+* Skip conversion if there is already a conversion file with the same name (double conversion prevention)
+* Next, if you cancel with the cancel button, the file being converted will be canceled after completion
+* Files can be added and deleted even during conversion
+* Files you want to convert can be saved with the save function and restarted (files that have been converted are skipped)
 
-# Scheduled to be implemented
+# To be implemented
 * Multi language
-* Monitoring specific folders, automatic conversion mode
+* Monitoring of specific folders, automatic conversion mode
 * Material design
