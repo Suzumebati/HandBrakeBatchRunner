@@ -12,7 +12,7 @@ I made it with VB.NET + WinForm for personal use, but I want to study, so I will
 3. Drag and drop the files you want to convert
 4. Click Start Conversion
 
-# Planned to be implemented
+# Useful function
 * If you specify the conversion completed folder, the converted file will be moved
 * Skip conversion if there is already a conversion file with the same name (double conversion prevention)
 * Next, if you cancel with the cancel button, the file being converted will be canceled after completion
