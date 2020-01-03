@@ -3,6 +3,7 @@
 // copyright twitter suzumebati(@suzumebati5)
 
 using HandBrakeBatchRunner.Setting;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -121,29 +122,35 @@ namespace HandBrakeBatchRunner.Convert
         /// <returns>非同期タスク</returns>
         public async Task BatchConvert()
         {
-            contoller = new ConvertProcessController(HandBrakeCLIFilePath);
-            contoller.ConvertStateChangedEvent += new ConvertStateChangedHandler(ConvertStateChanged);
-
-            for (currentFileIndex = 0; currentFileIndex < SourceFileList.Count; currentFileIndex++)
+            using (var mutex = new MutexWrapper(false, "HandBrakeBatchRunner"))
             {
-                string currentSourceFilePath = SourceFileList[currentFileIndex];
-                var replaceParam = CreateReplaceParam(ConvertSettingName, currentSourceFilePath, DestinationFolder);
+                // 既に実行中の場合は待機する
+                WaitingPreviosConvert(mutex);
 
-                // 変換先にすでにファイルが有る場合はスキップ
-                if (IsAlreadyExistCompleteFolder(replaceParam)) continue;
+                contoller = new ConvertProcessController(HandBrakeCLIFilePath);
+                contoller.ConvertStateChangedEvent += new ConvertStateChangedHandler(ConvertStateChanged);
 
-                // 一個のファイルを変換する
-                await contoller.ExecuteConvert(ConvertSetting, replaceParam );
+                for (currentFileIndex = 0; currentFileIndex < SourceFileList.Count; currentFileIndex++)
+                {
+                    string currentSourceFilePath = SourceFileList[currentFileIndex];
+                    var replaceParam = CreateReplaceParam(ConvertSettingName, currentSourceFilePath, DestinationFolder);
 
-                // 完了フォルダに移動
-                MoveCompleteFolder(currentSourceFilePath);
+                    // 変換先にすでにファイルが有る場合はスキップ
+                    if (IsAlreadyExistCompleteFolder(replaceParam)) continue;
 
-                // キャンセルされていたら中断
-                if (IsCancellationRequested || IsCancellationNextRequested) break;
+                    // 一個のファイルを変換する
+                    await contoller.ExecuteConvert(ConvertSetting, replaceParam);
+
+                    // 完了フォルダに移動
+                    MoveCompleteFolder(currentSourceFilePath);
+
+                    // キャンセルされていたら中断
+                    if (IsCancellationRequested || IsCancellationNextRequested) break;
+                }
             }
-
+            
             // イベントを発行
-            if(!IsCancellationRequested  && !IsCancellationNextRequested)
+            if (!IsCancellationRequested  && !IsCancellationNextRequested)
             {
                 var e = new ConvertStateChangedEventArgs();
                 e.AllProgress = 100;
@@ -152,6 +159,8 @@ namespace HandBrakeBatchRunner.Convert
                 e.FileStatus = "完了";
                 OnConvertStateChanged(e);
             }
+
+            contoller = null;
         }
 
         /// <summary>
@@ -253,6 +262,39 @@ namespace HandBrakeBatchRunner.Convert
             }
         }
 
+        /// <summary>
+        /// 既に開始している変換が終わるまで待機する
+        /// </summary>
+        /// <param name="mutex"></param>
+        /// <returns></returns>
+        private bool WaitingPreviosConvert(MutexWrapper mutex)
+        {
+            int waitCount = 0;
+            while (true)
+            {
+                if (IsCancellationRequested || IsCancellationNextRequested) return false;
+                bool createdNew = mutex.WaitOne(1000, false);
+
+                if(createdNew)
+                {
+                    return true;
+                }
+                else if(waitCount > 24 * 60 * 60)
+                {
+                    return false;
+                }
+                else
+                {
+                    var e = new ConvertStateChangedEventArgs();
+                    e.AllProgress = 0;
+                    e.AllStatus = $"0/{SourceFileList.Count}";
+                    e.FileProgress = 0;
+                    e.FileStatus = $"Wait{Math.Round((double)waitCount/60/60,1)}min";
+                    OnConvertStateChanged(e);
+                }
+            }
+        }
+        
         #endregion
 
         #region "event"

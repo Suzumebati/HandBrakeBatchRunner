@@ -181,12 +181,21 @@ namespace HandBrakeBatchRunner.FileWatcher
             {
                 if (disposing)
                 {
-                    Stop();
+                    
                 }
+                // アンマネージ開放
+                Stop();
+
                 disposedValue = true;
             }
         }
-        
+
+        ~ConvertFileWatcher()
+        {
+            // このコードを変更しないでください。クリーンアップ コードを上の Dispose(bool disposing) に記述します。
+            Dispose(false);
+        }
+
         // このコードは、破棄可能なパターンを正しく実装できるように追加されました。
         public void Dispose()
         {
