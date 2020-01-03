@@ -141,7 +141,7 @@ namespace HandBrakeBatchRunner.FileWatcher
                     return true;
                 }
             }
-            catch (IOException ex)
+            catch (IOException)
             {
                 return false;
             }

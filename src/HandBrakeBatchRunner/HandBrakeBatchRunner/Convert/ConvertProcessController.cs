@@ -154,8 +154,16 @@ namespace HandBrakeBatchRunner.Convert
                     if (isExit || outputEndEvent.Task.IsCompleted)
                     {
                         // プロセスが完了した場合
-                        result.Status = Constant.ConvertFileStatus.Completed;
                         result.ExitCode = proc.ExitCode;
+                        switch (result.ExitCode)
+                        {
+                            case 0:
+                                result.Status = Constant.ConvertFileStatus.Completed;
+                                break;
+                            default:
+                                result.Status = Constant.ConvertFileStatus.Error;
+                                break;
+                        }
                         break;
                     }
                     else if (tokenSource.Token.IsCancellationRequested)

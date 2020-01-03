@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace HandBrakeBatchRunner.Convert
 {
@@ -35,9 +36,9 @@ namespace HandBrakeBatchRunner.Convert
         /// <param name="millisecondsTimeout"></param>
         /// <param name="exitContext"></param>
         /// <returns></returns>
-        public virtual bool WaitOne(int millisecondsTimeout, bool exitContext)
+        public virtual Task<bool> WaitOne(int millisecondsTimeout, bool exitContext)
         {
-            return instance.WaitOne(millisecondsTimeout, exitContext);
+            return Task.Run(() => instance.WaitOne(millisecondsTimeout, exitContext));
         }
 
         #region IDisposable Support

@@ -76,6 +76,9 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            // 変換途中の場合は強制終了する
+            if (runner != null) runner.CancelConvert();
+
             // 設定保存
             settingManager.SaveSettings();
 

@@ -125,7 +125,7 @@ namespace HandBrakeBatchRunner.Convert
             using (var mutex = new MutexWrapper(false, "HandBrakeBatchRunner"))
             {
                 // 既に実行中の場合は待機する
-                WaitingPreviosConvert(mutex);
+                if (await WaitingPreviosConvert(mutex) == false) return;
 
                 contoller = new ConvertProcessController(HandBrakeCLIFilePath);
                 contoller.ConvertStateChangedEvent += new ConvertStateChangedHandler(ConvertStateChanged);
@@ -135,6 +135,9 @@ namespace HandBrakeBatchRunner.Convert
                     string currentSourceFilePath = SourceFileList[currentFileIndex];
                     var replaceParam = CreateReplaceParam(ConvertSettingName, currentSourceFilePath, DestinationFolder);
 
+                    // 変換元が存在しない場合はスキップ
+                    if (File.Exists(currentSourceFilePath) == false) continue;
+
                     // 変換先にすでにファイルが有る場合はスキップ
                     if (IsAlreadyExistCompleteFolder(replaceParam)) continue;
 
@@ -142,7 +145,10 @@ namespace HandBrakeBatchRunner.Convert
                     await contoller.ExecuteConvert(ConvertSetting, replaceParam);
 
                     // 完了フォルダに移動
-                    MoveCompleteFolder(currentSourceFilePath);
+                    if (contoller.Status == Constant.ConvertFileStatus.Completed)
+                    {
+                        MoveCompleteFolder(currentSourceFilePath);
+                    }
 
                     // キャンセルされていたら中断
                     if (IsCancellationRequested || IsCancellationNextRequested) break;
@@ -267,13 +273,22 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         /// <param name="mutex"></param>
         /// <returns></returns>
-        private bool WaitingPreviosConvert(MutexWrapper mutex)
+        private async Task<bool> WaitingPreviosConvert(MutexWrapper mutex)
         {
             int waitCount = 0;
             while (true)
             {
                 if (IsCancellationRequested || IsCancellationNextRequested) return false;
-                bool createdNew = mutex.WaitOne(1000, false);
+                bool createdNew;
+                try
+                {
+                    createdNew = await mutex.WaitOne(1000, false);
+                }
+                catch (AbandonedMutexException)
+                {
+                    createdNew = true;
+                }
+                waitCount++;
 
                 if(createdNew)
                 {
@@ -289,7 +304,7 @@ namespace HandBrakeBatchRunner.Convert
                     e.AllProgress = 0;
                     e.AllStatus = $"0/{SourceFileList.Count}";
                     e.FileProgress = 0;
-                    e.FileStatus = $"Wait{Math.Round((double)waitCount/60/60,1)}min";
+                    e.FileStatus = $"Wait {Math.Round((double)waitCount/60/60,1)}min";
                     OnConvertStateChanged(e);
                 }
             }

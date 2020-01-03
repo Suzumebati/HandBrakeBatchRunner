@@ -42,6 +42,7 @@ namespace HandBrakeBatchRunner
             Running,
             Canceled,
             TimeOut,
+            Error,
             Completed
         }
     }
