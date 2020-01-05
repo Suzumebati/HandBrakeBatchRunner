@@ -21,6 +21,41 @@ namespace HandBrakeBatchRunner.Convert
         private Mutex instance;
 
         /// <summary>
+        /// 取得開始イベント
+        /// </summary>
+        private CountdownEvent waitStartEvent = new CountdownEvent(1);
+
+        /// <summary>
+        /// 取得完了イベント
+        /// </summary>
+        private CountdownEvent waitEndEvent = new CountdownEvent(1);
+
+        /// <summary>
+        /// 開放イベント
+        /// </summary>
+        private CountdownEvent releaseEvent = new CountdownEvent(1);
+
+        /// <summary>
+        /// Mutexの管理タスク
+        /// </summary>
+        private Task mutexControll;
+
+        /// <summary>
+        /// 取得結果
+        /// </summary>
+        private bool waitResult;
+
+        /// <summary>
+        /// WaitOne引数(待ち時間)
+        /// </summary>
+        private int millisecondsTimeoutParam;
+
+        /// <summary>
+        /// WaitOne引数(exitContext)
+        /// </summary>
+        private bool exitContextParam;
+
+        /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="initiallyOwned"></param>
@@ -38,27 +73,74 @@ namespace HandBrakeBatchRunner.Convert
         /// <returns></returns>
         public virtual Task<bool> WaitOne(int millisecondsTimeout, bool exitContext)
         {
-            return Task.Run(() => instance.WaitOne(millisecondsTimeout, exitContext));
+        	// 引数保存
+            this.millisecondsTimeoutParam = millisecondsTimeout;
+            this.exitContextParam = exitContext;
+            
+            if (mutexControll == null)
+            {
+                mutexControll = Task.Factory.StartNew(() =>
+                {
+                    MutexControlTask();
+                }, TaskCreationOptions.LongRunning);
+            }
+
+            return Task.Run(() =>
+            {
+                waitStartEvent.Signal();
+                waitEndEvent.Wait();
+                waitEndEvent.Reset();
+                return waitResult;
+            });
+        }
+
+        /// <summary>
+        /// Mutexのコントロールタスク
+        /// </summary>
+        private void MutexControlTask()
+        {
+            while(true)
+            {
+            	// 開放が始まっていたら終了
+                if (releaseEvent.IsSet) break;
+                
+                // Mutex取得開始まで待機(待ち続けると開放処理ができないので1secごとに待つ)
+                if (waitStartEvent.Wait(1000) == false) continue;
+                waitStartEvent.Reset();
+
+				// Mutex取得を行う
+                waitResult = instance.WaitOne(millisecondsTimeoutParam,exitContextParam);
+                waitEndEvent.Signal();
+                
+                // 取得できた時点で処理終了
+                if(waitResult) break;
+            }
+
+			// 開放まで待機
+            releaseEvent.Wait();
+            releaseEvent.Dispose();
+
+			// Mutex開放処理
+            instance.ReleaseMutex();
+            instance.Dispose();
+            instance = null;
         }
 
         #region IDisposable Support
-        private bool disposedValue = false; // 重複する呼び出しを検出するには
+        
+        private bool disposedValue = false;
 
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
-                if (disposing)
+                if (mutexControll != null)
                 {
-                    // TODO: マネージ状態を破棄します (マネージ オブジェクト)。
+                    releaseEvent.Signal();
                 }
 
-                if (instance != null)
-                {
-                    instance.ReleaseMutex();
-                    instance.Dispose();
-                    instance = null;
-                }
+                waitStartEvent.Dispose();
+                waitEndEvent.Dispose();
 
                 disposedValue = true;
             }
@@ -66,17 +148,15 @@ namespace HandBrakeBatchRunner.Convert
 
         ~MutexWrapper()
         {
-            // このコードを変更しないでください。クリーンアップ コードを上の Dispose(bool disposing) に記述します。
             Dispose(false);
         }
 
-        // このコードは、破棄可能なパターンを正しく実装できるように追加されました。
         public void Dispose()
         {
-            // このコードを変更しないでください。クリーンアップ コードを上の Dispose(bool disposing) に記述します。
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         #endregion
     }
 }

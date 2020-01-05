@@ -177,7 +177,7 @@ namespace HandBrakeBatchRunner
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ConvertStart_Click(object sender, RoutedEventArgs e)
+        private async void ConvertStart_Click(object sender, RoutedEventArgs e)
         {
             // 入力チェック
             if (InputCheck() == false) return;
@@ -198,19 +198,16 @@ namespace HandBrakeBatchRunner
             runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(ConvertStateChanged);
             
             // 一括変換開始
-            var convTask = runner.BatchConvert();
+            await runner.BatchConvert();
 
             // タスク終了後に画面状態を変更する
-            convTask.ContinueWith(task =>
+            SetButtonStatus(false);
+            if (runner != null && !runner.IsCancellationRequested && !runner.IsCancellationNextRequested)
             {
-                SetButtonStatus(false);
-                if (runner !=null && !runner.IsCancellationRequested && !runner.IsCancellationNextRequested)
-                {
-                    SetStatus(100, $"{SourceFileListBox.Items.Count}/{SourceFileListBox.Items.Count}", 100, "完了", string.Empty);
-                }
-                TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
-                runner = null;
-            });
+                SetStatus(100, $"{SourceFileListBox.Items.Count}/{SourceFileListBox.Items.Count}", 100, "完了", string.Empty);
+            }
+            TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
+            runner = null;
         }
 
         /// <summary>
