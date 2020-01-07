@@ -135,10 +135,12 @@ namespace HandBrakeBatchRunner
         {
             if (e.Key == Key.Delete)
             {
+                // Deleteキーの場合は選択状態のファイルを削除
                 DeleteFile_Click(sender, null);
             }
             else if (e.Key == Key.A && (Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.None)
             {
+                // Ctrl+Aキーの場合は全選択と全解除をトグル動作
                 if (SourceFileListBox.SelectedItems.Count > 0)
                 {
                     SourceFileListBox.SelectedItems.Clear();
@@ -150,6 +152,7 @@ namespace HandBrakeBatchRunner
             }
             else if (e.Key == Key.C && (Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.None)
             {
+                // Ctrl+Cキーの場合は選択したファイルパスをクリップボードにコピー
                 var stb = new StringBuilder();
                 foreach(string item in SourceFileListBox.SelectedItems)
                 {
@@ -159,6 +162,7 @@ namespace HandBrakeBatchRunner
             }
             else if (e.Key == Key.V && (Keyboard.Modifiers & ModifierKeys.Control) != ModifierKeys.None)
             {
+                // Ctrl+Vキーの場合は選択したファイルパスをファイルリストに追加
                 if (Clipboard.ContainsText())
                 {
                     using (var sr = new StringReader(Clipboard.GetText()))
@@ -202,7 +206,7 @@ namespace HandBrakeBatchRunner
 
             // タスク終了後に画面状態を変更する
             SetButtonStatus(false);
-            if (runner != null && !runner.IsCancellationRequested && !runner.IsCancellationNextRequested)
+            if (runner?.IsCancellationRequested == false && runner?.IsCancellationNextRequested == false)
             {
                 SetStatus(100, $"{SourceFileListBox.Items.Count}/{SourceFileListBox.Items.Count}", 100, "完了", string.Empty);
             }
@@ -217,7 +221,7 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void ConvertCancelNextButton_Click(object sender, RoutedEventArgs e)
         {
-            if (runner != null && runner.IsCancellationNextRequested == false)
+            if (runner?.IsCancellationNextRequested == false)
             {
                 runner.CancelNextConvert();
                 ConvertCancelNextButton.IsEnabled = false;
@@ -232,7 +236,7 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void ConvertCancelButton_Click(object sender, RoutedEventArgs e)
         {
-            if(runner != null && runner.IsCancellationRequested == false)
+            if(runner?.IsCancellationRequested == false)
             {
                 runner.CancelConvert();
                 ConvertCancelButton.IsEnabled = false;
@@ -379,6 +383,7 @@ namespace HandBrakeBatchRunner
             var win = new SettingWindow();
             win.ShowDialog();
 
+            // 監視設定画変更された場合に反映する
             if(watcher.IsWatch && !settingManager.ConvertSettingBody.EnableAutoAdd)
             {
                 watcher.Stop();

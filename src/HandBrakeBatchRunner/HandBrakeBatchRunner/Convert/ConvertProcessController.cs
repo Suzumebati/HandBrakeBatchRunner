@@ -6,6 +6,7 @@ using HandBrakeBatchRunner.Setting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -88,8 +89,8 @@ namespace HandBrakeBatchRunner.Convert
 
                 startInfo.RedirectStandardOutput = true;
                 startInfo.RedirectStandardError = true;
-                //startInfo.StandardErrorEncoding = Encoding.UTF8;
-                //startInfo.StandardOutputEncoding = Encoding.UTF8;
+                startInfo.StandardErrorEncoding = Encoding.UTF8;
+                startInfo.StandardOutputEncoding = Encoding.UTF8;
 
                 proc.OutputDataReceived += new DataReceivedEventHandler(OutputDataReceived);
                 proc.ErrorDataReceived += new DataReceivedEventHandler(OutputDataReceived);
@@ -97,7 +98,7 @@ namespace HandBrakeBatchRunner.Convert
                 Status = Constant.ConvertFileStatus.Running;
 
                 // 非同期実行開始
-                ProcessResult result = await ExecuteConvertCommand(proc, Constant.WaitMiliSecond);
+                ProcessResult result = await ExecuteConvertCommand(proc, Constant.ProcessWaitMaxMiliSecond);
                 Status = result.Status;
             }
         }
@@ -148,8 +149,8 @@ namespace HandBrakeBatchRunner.Convert
                 while (true)
                 {
                     // 一定時間待つ
-                    bool isExit = await WaitForExitAsync(proc, Constant.WaitIntervalMiliSecond);
-                    runTime += Constant.WaitIntervalMiliSecond;
+                    bool isExit = await WaitForExitAsync(proc, Constant.ProcessWaitIntervalMiliSecond);
+                    runTime += Constant.ProcessWaitIntervalMiliSecond;
 
                     if (isExit || outputEndEvent.Task.IsCompleted)
                     {
@@ -237,7 +238,7 @@ namespace HandBrakeBatchRunner.Convert
                 LogData = e.Data
             };
 
-            // パーセンテージ＋各種情報
+            // パーセンテージ＋残り時間
             if (Constant.RegexLogOutputProgressAndRemain.IsMatch(e.Data))
             {
                 GroupCollection groups = Constant.RegexLogOutputProgressAndRemain.Match(e.Data).Groups;

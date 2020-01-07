@@ -48,8 +48,8 @@ namespace HandBrakeBatchRunner.Setting
                                                64 * 1024))
                 {
                     var obj = (ConvertSettingManager)json.ReadObject(fs);
-                    this.ConvertSettingBody = obj.ConvertSettingBody;
-                    this.ConvertSettingList = obj.ConvertSettingList;
+                    ConvertSettingBody = obj.ConvertSettingBody;
+                    ConvertSettingList = obj.ConvertSettingList;
                 }
             }
             catch
