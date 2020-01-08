@@ -33,6 +33,7 @@
             <Button Content="削除" Margin="5,5,5,5" Height="25" Click="DeleteFile_Click"/>
             <Button Content="保存" Margin="5,5,5,5" Height="25" Click="SaveFileList_Click"/>
             <Button Content="読込" Margin="5,5,5,5" Height="25" Click="LoadFileList_Click"/>
+            <Button Content="ログ" Margin="5,5,5,5" Height="25" Click="LogButton_Click"/>
         </StackPanel>
 
         <Label Content="変換設定" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="1" Height="30" Width="100"  />

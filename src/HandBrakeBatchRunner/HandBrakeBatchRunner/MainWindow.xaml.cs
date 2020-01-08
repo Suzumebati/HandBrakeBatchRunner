@@ -369,6 +369,22 @@ namespace HandBrakeBatchRunner
         }
 
         /// <summary>
+        /// ログボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void LogButton_Click(object sender, RoutedEventArgs e)
+        {
+            // ログウインドウをモーダル表示する
+            var win = new LogWindow();
+            if ( runner != null )
+            {
+                runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(win.ConvertStateChanged);
+            }
+            win.ShowDialog();
+        }
+
+        /// <summary>
         /// 設定ボタンのクリックイベント
         /// </summary>
         /// <param name="sender"></param>
