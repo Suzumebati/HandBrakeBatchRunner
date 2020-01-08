@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         xmlns:setting="clr-namespace:HandBrakeBatchRunner.Setting"
         DataContext="{x:Static setting:ConvertSettingManager.Current}"
-        Title="SettingWindow" Height="450" Width="800" Closing="Window_Closing">
+        Title="SettingWindow" Height="450" Width="800" Closing="Window_Closing" Deactivated="Window_Deactivated">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="110"/>
@@ -43,22 +43,26 @@
         <Button Content="削除" Grid.Column="2" Grid.Row="2" Height="30" Margin="5,5,5,5" Click="DeleteSettingButton_Click" VerticalAlignment="Top"/>
 
         <Label Content="変換コマンド" Grid.Column="0" Grid.Row="3" HorizontalAlignment="Stretch"  VerticalAlignment="Center" Margin="2,0,0,0"/>
-        <TextBox Name="CommandTemplateText" Grid.Column="1" Grid.Row="3" Text="" TextWrapping="WrapWithOverflow" AutoWordSelection="True" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="2,2,2,2">
-            <TextBox.ToolTip>
-                <ToolTip>
-                    <TextBlock>
-                        HandBrakeCLIのコマンド引数を設定します。<LineBreak/>
-                        以下の変数を使用可能です。<LineBreak/>
-                        {CONVERT_SETTING_NAME}=選択された変換設定名<LineBreak/>
-                        {SOURCE_FILE_PATH}=選変換元ファイルパス<LineBreak/>
-                        {SOURCE_FILE_NAME}=変換元ファイル名<LineBreak/>
-                        {SOURCE_FILE_NAME_WITHOUT_EXTENSION}=変換元ファイル名(拡張子を除く)<LineBreak/>
-                        {DST_FOLDER}=変換先フォルダパス<LineBreak/>
-                    </TextBlock>
-                </ToolTip>
-            </TextBox.ToolTip>
-        </TextBox>
-
+        <TextBox Name="CommandTemplateText" Grid.Column="1" Grid.Row="3" Text="" TextWrapping="WrapWithOverflow" AutoWordSelection="True" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="2,2,2,2" GotFocus="CommandTemplateText_GotFocus" LostFocus="CommandTemplateText_LostFocus"/>
+        <Popup Name="CommandTemplateSupplementPopUp" PopupAnimation="Fade" AllowsTransparency="True" PlacementTarget="{Binding ElementName=CommandTemplateText}">
+            <TextBox Width="450" Height="150" IsReadOnly="True" GotFocus="CommandTemplateSupplementPopUp_GotFocus" LostFocus="CommandTemplateSupplementPopUp_LostFocus" Text="HandBrakeCLIのコマンド引数を設定します。&#xa;以下の変数を使用可能です。&#xa;{CONVERT_SETTING_NAME}=選択された変換設定名&#xa;{SOURCE_FILE_PATH}=選変換元ファイルパス&#xa;{SOURCE_FILE_NAME}=変換元ファイル名&#xa;{SOURCE_FILE_NAME_WITHOUT_EXTENSION}=変換元ファイル名(拡張子を除く)&#xa;{DST_FOLDER}=変換先フォルダパス">
+                <TextBox.Template>
+                    <ControlTemplate TargetType="{x:Type TextBoxBase}">
+                        <Grid Background="Transparent">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Path Grid.Row="0" Data="M50,10 L60,0 70,10 " Stroke="{TemplateBinding BorderBrush}"/>
+                            <Polygon Grid.Row="0" Points="50,10 60,0 70,10" Fill="{TemplateBinding Background}" />
+                            <Border Grid.Row="1" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                <ScrollViewer x:Name="PART_ContentHost"/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </TextBox.Template>
+            </TextBox>
+        </Popup>
         <Label Content="変換後ファイル名" Grid.Column="0" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
         <TextBox Name="DestinationFileTemplateTextBox" Grid.Column="1" Grid.Row="4" Margin="2,2,2,2"/>
 

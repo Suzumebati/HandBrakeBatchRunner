@@ -161,6 +161,55 @@ namespace HandBrakeBatchRunner
 
             }
         }
-        
+
+        /// <summary>
+        /// コマンドテンプレートのフォーカスイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CommandTemplateText_GotFocus(object sender, RoutedEventArgs e)
+        {
+            CommandTemplateSupplementPopUp.IsOpen = true;
+        }
+
+        /// <summary>
+        /// コマンドテンプレートのフォーカスアウトイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CommandTemplateText_LostFocus(object sender, RoutedEventArgs e)
+        {
+            CommandTemplateSupplementPopUp.IsOpen = false;
+        }
+
+        /// <summary>
+        /// ポップアップへのフォーカスイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CommandTemplateSupplementPopUp_GotFocus(object sender, RoutedEventArgs e)
+        {
+            CommandTemplateSupplementPopUp.IsOpen = true;
+        }
+
+        /// <summary>
+        /// ポップアップのフォーカスアウトイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CommandTemplateSupplementPopUp_LostFocus(object sender, RoutedEventArgs e)
+        {
+            CommandTemplateSupplementPopUp.IsOpen = false;
+        }
+
+        /// <summary>
+        /// ウインドウの非アクティブイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_Deactivated(object sender, System.EventArgs e)
+        {
+            CommandTemplateSupplementPopUp.IsOpen = false;
+        }
     }
 }
