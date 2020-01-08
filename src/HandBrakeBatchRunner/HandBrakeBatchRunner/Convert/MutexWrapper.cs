@@ -64,13 +64,18 @@ namespace HandBrakeBatchRunner.Convert
         {
             instance = new Mutex(initiallyOwned, name);
         }
-       
+
         /// <summary>
         /// 指定時間Mutexが取得できるまで待つ
         /// </summary>
         /// <param name="millisecondsTimeout"></param>
         /// <param name="exitContext"></param>
         /// <returns></returns>
+        /// <remarks>
+        /// Mutexは同一スレッドで取得、開放をしないといけない仕様のため
+        /// awaitするためにタスクをロングラン(内部はスレッド実行)しシグナル処理で対応している。
+        /// 無駄が多いのであまり良い実装ではないがこのツールでは頻繁に実行しないのでさっぱりかけるのを優先する。
+        /// </remarks>
         public virtual Task<bool> WaitOne(int millisecondsTimeout, bool exitContext)
         {
         	// 引数保存
