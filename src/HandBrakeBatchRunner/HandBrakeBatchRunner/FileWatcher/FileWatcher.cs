@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace HandBrakeBatchRunner.FileWatcher
 {
@@ -54,9 +55,11 @@ namespace HandBrakeBatchRunner.FileWatcher
         /// <param name="filter"></param>
         public void Start(string path,string filter)
         {
-            // ファイルチェックスレッド開始
-            checkThread = new Thread(new ThreadStart(FileCheckThread));
-            checkThread.Start();
+            // ファイルチェック開始
+            Task.Factory.StartNew(() =>
+            {
+                FileCheckThread();
+            }, TaskCreationOptions.LongRunning);
 
             // ファイルの変更イベント開始
             watcher = new FileSystemWatcher(path, string.IsNullOrWhiteSpace(filter) ? "*.*" : filter);
@@ -88,13 +91,13 @@ namespace HandBrakeBatchRunner.FileWatcher
         /// <summary>
         /// ファイルのチェックスレッド
         /// </summary>
-        public void FileCheckThread()
+        public async void FileCheckThread()
         {
             while (true)
             {
                 // 1秒待ち合わせ(キャンセル受付)
                 if (stopping) return;
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
                 if (stopping) return;
 
                 // 新規ファイルが来ていない場合は何もしない
@@ -120,8 +123,10 @@ namespace HandBrakeBatchRunner.FileWatcher
                 // ファイル追加イベント発行
                 if (addFilePathList.Count > 0)
                 {
-                    var e = new FileAddedEventArgs();
-                    e.FileList = addFilePathList;
+                    var e = new FileAddedEventArgs
+                    {
+                        FileList = addFilePathList
+                    };
                     OnFileAdded(e);
                 }
             }
@@ -179,10 +184,6 @@ namespace HandBrakeBatchRunner.FileWatcher
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    
-                }
                 // アンマネージ開放
                 Stop();
 

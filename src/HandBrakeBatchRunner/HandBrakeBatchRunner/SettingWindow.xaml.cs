@@ -25,7 +25,7 @@ namespace HandBrakeBatchRunner
             InitializeComponent();
 
             // リストボックスにバインド
-            this.ConvertSettingListBox.ItemsSource = ConvertSettingManager.Current.ConvertSettingList;
+            ConvertSettingListBox.ItemsSource = ConvertSettingManager.Current.ConvertSettingList;
         }
 
 
@@ -55,7 +55,7 @@ namespace HandBrakeBatchRunner
              using (var dlg = new CommonOpenFileDialog("HandBrakeCLIを選択してください。"))
             {
                 dlg.Filters.Add(new CommonFileDialogFilter("実行ファイル(*.exe)", "*.exe"));
-                if (!string.IsNullOrWhiteSpace(this.HandBrakeCLIFilePath.Text))
+                if (!string.IsNullOrWhiteSpace(HandBrakeCLIFilePath.Text))
                 {
                     dlg.InitialDirectory = Path.GetDirectoryName(HandBrakeCLIFilePath.Text);
                 }
@@ -76,7 +76,7 @@ namespace HandBrakeBatchRunner
             using (var dlg = new CommonOpenFileDialog("HandBrakeCLIを選択してください。"))
             {
                 dlg.IsFolderPicker = true;
-                if (!string.IsNullOrWhiteSpace(this.WatchFolderTextBox.Text))
+                if (!string.IsNullOrWhiteSpace(WatchFolderTextBox.Text))
                 {
                     dlg.InitialDirectory = Path.GetDirectoryName(WatchFolderTextBox.Text);
                 }
@@ -108,9 +108,9 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void DeleteSettingButton_Click(object sender, RoutedEventArgs e)
         {
-            if (this.ConvertSettingListBox.SelectedIndex != -1)
+            if (ConvertSettingListBox.SelectedIndex != -1)
             {
-                var selectedSetting = this.ConvertSettingListBox.SelectedItem as ConvertSettingItem;
+                var selectedSetting = ConvertSettingListBox.SelectedItem as ConvertSettingItem;
                 ConvertSettingManager.Current.DeleteSetting(selectedSetting.ConvertSettingName);
             }
         }
@@ -161,6 +161,55 @@ namespace HandBrakeBatchRunner
 
             }
         }
-        
+
+        /// <summary>
+        /// コマンドテンプレートのフォーカスイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CommandTemplateText_GotFocus(object sender, RoutedEventArgs e)
+        {
+            CommandTemplateSupplementPopUp.IsOpen = true;
+        }
+
+        /// <summary>
+        /// コマンドテンプレートのフォーカスアウトイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CommandTemplateText_LostFocus(object sender, RoutedEventArgs e)
+        {
+            CommandTemplateSupplementPopUp.IsOpen = false;
+        }
+
+        /// <summary>
+        /// ポップアップへのフォーカスイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CommandTemplateSupplementPopUp_GotFocus(object sender, RoutedEventArgs e)
+        {
+            CommandTemplateSupplementPopUp.IsOpen = true;
+        }
+
+        /// <summary>
+        /// ポップアップのフォーカスアウトイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CommandTemplateSupplementPopUp_LostFocus(object sender, RoutedEventArgs e)
+        {
+            CommandTemplateSupplementPopUp.IsOpen = false;
+        }
+
+        /// <summary>
+        /// ウインドウの非アクティブイベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_Deactivated(object sender, System.EventArgs e)
+        {
+            CommandTemplateSupplementPopUp.IsOpen = false;
+        }
     }
 }

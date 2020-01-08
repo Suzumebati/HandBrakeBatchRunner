@@ -158,11 +158,13 @@ namespace HandBrakeBatchRunner.Convert
             // イベントを発行
             if (!IsCancellationRequested  && !IsCancellationNextRequested)
             {
-                var e = new ConvertStateChangedEventArgs();
-                e.AllProgress = 100;
-                e.AllStatus = $"{SourceFileList.Count}/{SourceFileList.Count}";
-                e.FileProgress = 100;
-                e.FileStatus = "完了";
+                var e = new ConvertStateChangedEventArgs
+                {
+                    AllProgress = 100,
+                    AllStatus = $"{SourceFileList.Count}/{SourceFileList.Count}",
+                    FileProgress = 100,
+                    FileStatus = "完了"
+                };
                 OnConvertStateChanged(e);
             }
 
@@ -261,9 +263,17 @@ namespace HandBrakeBatchRunner.Convert
             var compFilePath = Path.Combine(CompleteFolder,Path.GetFileName(currentSourceFilePath));
             if (File.Exists(compFilePath) == false)
             {
-                Task.Run(() => {
-                    Thread.Sleep(1000);
-                    File.Move(currentSourceFilePath, compFilePath); 
+                // プロセス終了後に開放されるラグ時間があるため、一定時間待機後移動する
+                Task.Run(async () => {
+                    await Task.Delay(Constant.FileMoveDelayMiliSecond);
+                    try
+                    {
+                        File.Move(currentSourceFilePath, compFilePath);
+                    }
+                    catch(IOException)
+                    {
+
+                    }
                 });
             }
         }
@@ -282,7 +292,7 @@ namespace HandBrakeBatchRunner.Convert
                 bool createdNew;
                 try
                 {
-                    createdNew = await mutex.WaitOne(1000, false);
+                    createdNew = await mutex.WaitOne(Constant.MutexWaitIntervalMiliSecond, false);
                 }
                 catch (AbandonedMutexException)
                 {
@@ -294,17 +304,19 @@ namespace HandBrakeBatchRunner.Convert
                 {
                     return true;
                 }
-                else if(waitCount > 24 * 60 * 60)
+                else if(waitCount * Constant.MutexWaitIntervalMiliSecond > Constant.MutexWaitMaxMiliSecond)
                 {
                     return false;
                 }
                 else
                 {
-                    var e = new ConvertStateChangedEventArgs();
-                    e.AllProgress = 0;
-                    e.AllStatus = $"0/{SourceFileList.Count}";
-                    e.FileProgress = 0;
-                    e.FileStatus = $"Wait {Math.Round((double)waitCount/60/60,1)}min";
+                    var e = new ConvertStateChangedEventArgs
+                    {
+                        AllProgress = 0,
+                        AllStatus = $"0/{SourceFileList.Count}",
+                        FileProgress = 0,
+                        FileStatus = $"Wait {Math.Round((double)waitCount / 60, 0)}min"
+                    };
                     OnConvertStateChanged(e);
                 }
             }
@@ -324,7 +336,7 @@ namespace HandBrakeBatchRunner.Convert
             // イベントを発行
             e.AllProgress = (int)(((double)currentFileIndex / SourceFileList.Count) * 100);
             e.AllStatus = $"{currentFileIndex}/{SourceFileList.Count}";
-            e.SourceFilePath = this.SourceFileList[currentFileIndex];
+            e.SourceFilePath = SourceFileList[currentFileIndex];
             OnConvertStateChanged(e);
         }
 
