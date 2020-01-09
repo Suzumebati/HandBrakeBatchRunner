@@ -20,7 +20,7 @@ namespace HandBrakeBatchRunner.FileWatcher
     public class FileAddedEventArgs : EventArgs
     {
         /// <summary>
-        /// 全体進捗の％
+        /// ファイルパスリスト
         /// </summary>
         public List<string> FileList { get; set; } = new List<string>();
     }

@@ -7,14 +7,14 @@ using System;
 namespace HandBrakeBatchRunner.Convert
 {
     /// <summary>
-    /// アウトプットデータ受信イベントハンドラー
+    /// 変換状態変更イベントハンドラー
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
     public delegate void ConvertStateChangedHandler(object sender, ConvertStateChangedEventArgs e);
 
     /// <summary>
-    /// アウトプットデータ受信イベント引数クラス
+    /// 変換状態変更イベント引数クラス
     /// </summary>
     public class ConvertStateChangedEventArgs : EventArgs
     {
