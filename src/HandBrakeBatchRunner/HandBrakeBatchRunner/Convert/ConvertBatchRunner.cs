@@ -144,19 +144,24 @@ namespace HandBrakeBatchRunner.Convert
                     // 一個のファイルを変換する
                     await contoller.ExecuteConvert(ConvertSetting, replaceParam);
 
-                    // 完了フォルダに移動
                     if (contoller.Status == Constant.ConvertFileStatus.Completed)
                     {
+                        // 正常完了した場合は完了フォルダに移動
                         MoveCompleteFolder(currentSourceFilePath);
+                    }
+                    else
+                    {
+                        // 正常に完了しなかった場合は途中のファイルを削除する
+                        DeleteNotCompleteFile(replaceParam);
                     }
 
                     // キャンセルされていたら中断
                     if (IsCancellationRequested || IsCancellationNextRequested) break;
                 }
             }
-            
+
             // イベントを発行
-            if (!IsCancellationRequested  && !IsCancellationNextRequested)
+            if (!IsCancellationRequested && !IsCancellationNextRequested)
             {
                 var e = new ConvertStateChangedEventArgs
                 {
@@ -239,13 +244,44 @@ namespace HandBrakeBatchRunner.Convert
                 // 変換後ファイル名が指定されていない場合は判断できないので存在しない扱いとする
                 return false;
             }
-            else if (File.Exists(Path.Combine(DestinationFolder,dstFileName)))
+            else if (File.Exists(Path.Combine(DestinationFolder, dstFileName)))
             {
                 return true;
             }
             else
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 変換が完了しなかった場合に変換後ファイルを削除する
+        /// </summary>
+        /// <param name="replaceParam"></param>
+        protected virtual void DeleteNotCompleteFile(Dictionary<string, string> replaceParam)
+        {
+            var dstFileName = ConvertSetting.GetDestinationFileName(replaceParam);
+            if (string.IsNullOrEmpty(dstFileName))
+            {
+                // 変換後ファイル名が指定されていない場合は判断できないので存在しない扱いとする
+                return;
+            }
+            var dstFilePath = Path.Combine(DestinationFolder, dstFileName);
+            if (File.Exists(dstFilePath))
+            {
+                // プロセス終了後に開放されるラグ時間があるため、一定時間待機後に未完了ファイルを削除する
+                Task.Run(async () =>
+                {
+                    await Task.Delay(Constant.FileMoveDelayMiliSecond);
+                    try
+                    {
+                        File.Delete(dstFilePath);
+                    }
+                    catch (IOException)
+                    {
+
+                    }
+                });
             }
         }
 
@@ -260,17 +296,18 @@ namespace HandBrakeBatchRunner.Convert
                 return;
             }
 
-            var compFilePath = Path.Combine(CompleteFolder,Path.GetFileName(currentSourceFilePath));
+            var compFilePath = Path.Combine(CompleteFolder, Path.GetFileName(currentSourceFilePath));
             if (File.Exists(compFilePath) == false)
             {
                 // プロセス終了後に開放されるラグ時間があるため、一定時間待機後移動する
-                Task.Run(async () => {
+                Task.Run(async () =>
+                {
                     await Task.Delay(Constant.FileMoveDelayMiliSecond);
                     try
                     {
                         File.Move(currentSourceFilePath, compFilePath);
                     }
-                    catch(IOException)
+                    catch (IOException)
                     {
 
                     }
@@ -300,11 +337,11 @@ namespace HandBrakeBatchRunner.Convert
                 }
                 waitCount++;
 
-                if(createdNew)
+                if (createdNew)
                 {
                     return true;
                 }
-                else if(waitCount * Constant.MutexWaitIntervalMiliSecond > Constant.MutexWaitMaxMiliSecond)
+                else if (waitCount * Constant.MutexWaitIntervalMiliSecond > Constant.MutexWaitMaxMiliSecond)
                 {
                     return false;
                 }
@@ -321,7 +358,7 @@ namespace HandBrakeBatchRunner.Convert
                 }
             }
         }
-        
+
         #endregion
 
         #region "event"

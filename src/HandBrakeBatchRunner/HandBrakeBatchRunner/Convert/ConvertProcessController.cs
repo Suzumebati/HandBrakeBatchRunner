@@ -40,7 +40,7 @@ namespace HandBrakeBatchRunner.Convert
         private TaskCompletionSource<bool> outputEndEvent = new TaskCompletionSource<bool>();
 
         #endregion
-               
+
         #region "property"
 
         /// <summary>
@@ -89,8 +89,8 @@ namespace HandBrakeBatchRunner.Convert
 
                 startInfo.RedirectStandardOutput = true;
                 startInfo.RedirectStandardError = true;
-                startInfo.StandardErrorEncoding = Encoding.UTF8;
-                startInfo.StandardOutputEncoding = Encoding.UTF8;
+                //startInfo.StandardErrorEncoding = Encoding.UTF8;
+                //startInfo.StandardOutputEncoding = Encoding.UTF8;
 
                 proc.OutputDataReceived += new DataReceivedEventHandler(OutputDataReceived);
                 proc.ErrorDataReceived += new DataReceivedEventHandler(OutputDataReceived);

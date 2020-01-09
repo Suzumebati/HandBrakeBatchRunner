@@ -21,12 +21,12 @@ namespace HandBrakeBatchRunner.Convert
         /// <summary>
         /// 全体進捗の％
         /// </summary>
-        public int AllProgress { get; set; } = 0;
+        public int AllProgress { get; set; } = -1;
 
         /// <summary>
         /// ファイル進捗の％
         /// </summary>
-        public int FileProgress { get; set; } = 0;
+        public int FileProgress { get; set; } = -1;
 
         /// <summary>
         /// 全体のステータス

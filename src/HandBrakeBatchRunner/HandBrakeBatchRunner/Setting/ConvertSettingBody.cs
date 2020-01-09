@@ -24,7 +24,8 @@ namespace HandBrakeBatchRunner.Setting
         /// </summary>
         [DataMember]
         private string _HandBrakeCLIFilePath;
-        public string HandBrakeCLIFilePath {
+        public string HandBrakeCLIFilePath
+        {
             get { return _HandBrakeCLIFilePath; }
             set { SetProperty(ref _HandBrakeCLIFilePath, value); }
         }
@@ -50,7 +51,7 @@ namespace HandBrakeBatchRunner.Setting
             get { return _ChoiceDestinationFolder; }
             set { SetProperty(ref _ChoiceDestinationFolder, value); }
         }
-        
+
         /// <summary>
         /// 監視フォルダ設定
         /// </summary>

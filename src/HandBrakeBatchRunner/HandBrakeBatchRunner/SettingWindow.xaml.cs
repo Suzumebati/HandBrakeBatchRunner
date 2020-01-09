@@ -52,7 +52,7 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void OpenFileButton_Click(object sender, RoutedEventArgs e)
         {
-             using (var dlg = new CommonOpenFileDialog("HandBrakeCLIを選択してください。"))
+            using (var dlg = new CommonOpenFileDialog("HandBrakeCLIを選択してください。"))
             {
                 dlg.Filters.Add(new CommonFileDialogFilter("実行ファイル(*.exe)", "*.exe"));
                 if (!string.IsNullOrWhiteSpace(HandBrakeCLIFilePath.Text))

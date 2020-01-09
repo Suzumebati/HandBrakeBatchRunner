@@ -31,8 +31,8 @@ namespace HandBrakeBatchRunner.FileWatcher
         /// <summary>
         /// ファイル監視スレッド
         /// </summary>
-        private Thread checkThread; 
-        
+        private Thread checkThread;
+
         /// <summary>
         /// 追加ファイルリスト
         /// </summary>
@@ -53,7 +53,7 @@ namespace HandBrakeBatchRunner.FileWatcher
         /// </summary>
         /// <param name="path"></param>
         /// <param name="filter"></param>
-        public void Start(string path,string filter)
+        public void Start(string path, string filter)
         {
             // ファイルチェック開始
             Task.Factory.StartNew(() =>
@@ -81,7 +81,7 @@ namespace HandBrakeBatchRunner.FileWatcher
                 watcher.Dispose();
                 watcher = null;
             }
-            if(checkThread != null)
+            if (checkThread != null)
             {
                 checkThread = null;
             }
@@ -159,7 +159,7 @@ namespace HandBrakeBatchRunner.FileWatcher
         /// <param name="e"></param>
         private void FileCreated(object sender, FileSystemEventArgs e)
         {
-            lock(lockObj)
+            lock (lockObj)
             {
                 if (checkFilePathList.IndexOf(e.FullPath) == -1)
                 {

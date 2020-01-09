@@ -31,11 +31,16 @@ namespace HandBrakeBatchRunner
         /// 設定マネージャ
         /// </summary>
         private ConvertSettingManager settingManager = ConvertSettingManager.Current;
-        
+
         /// <summary>
         /// 監視クラス
         /// </summary>
         private ConvertFileWatcher watcher = new ConvertFileWatcher();
+
+        /// <summary>
+        /// ログウィンドウ
+        /// </summary>
+        private LogWindow logWin = null;
 
         /// <summary>
         /// コンストラクタ
@@ -154,7 +159,7 @@ namespace HandBrakeBatchRunner
             {
                 // Ctrl+Cキーの場合は選択したファイルパスをクリップボードにコピー
                 var stb = new StringBuilder();
-                foreach(string item in SourceFileListBox.SelectedItems)
+                foreach (string item in SourceFileListBox.SelectedItems)
                 {
                     stb.AppendLine(item);
                 }
@@ -167,7 +172,7 @@ namespace HandBrakeBatchRunner
                 {
                     using (var sr = new StringReader(Clipboard.GetText()))
                     {
-                        while(sr.Peek() > -1)
+                        while (sr.Peek() > -1)
                         {
                             SourceFileListBox.Items.Add(sr.ReadLine());
                         }
@@ -190,7 +195,7 @@ namespace HandBrakeBatchRunner
 
             // 状態の変更
             SetButtonStatus(true);
-            SetStatus(0, string.Empty, 0, string.Empty,string.Empty);
+            SetStatus(0, string.Empty, 0, string.Empty, string.Empty);
             TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Normal);
 
             // 変換クラス作成
@@ -200,7 +205,9 @@ namespace HandBrakeBatchRunner
                                             setting.ConvertSettingName,
                                             settingManager.ConvertSettingBody.HandBrakeCLIFilePath);
             runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(ConvertStateChanged);
-            
+            if (logWin != null) runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(logWin.ConvertStateChanged);
+
+
             // 一括変換開始
             await runner.BatchConvert();
 
@@ -236,7 +243,7 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void ConvertCancelButton_Click(object sender, RoutedEventArgs e)
         {
-            if(runner?.IsCancellationRequested == false)
+            if (runner?.IsCancellationRequested == false)
             {
                 runner.CancelConvert();
                 ConvertCancelButton.IsEnabled = false;
@@ -264,7 +271,7 @@ namespace HandBrakeBatchRunner
             {
                 Dispatcher.Invoke((Action)(() =>
                 {
-                    FileAdded(sender,e);
+                    FileAdded(sender, e);
                 }));
                 return;
             }
@@ -312,7 +319,7 @@ namespace HandBrakeBatchRunner
             if (selectItem.Any())
             {
                 selectItem.ToList().ForEach((item) => SourceFileListBox.Items.Remove(item));
-                
+
                 if (runner != null)
                 {
                     runner.ChangeSorceFileList(SourceFileListBox.Items.OfType<string>().ToList());
@@ -332,9 +339,9 @@ namespace HandBrakeBatchRunner
                 dlg.Filters.Add(new CommonFileDialogFilter("HandBrakeBatchRunner File List", "hfl"));
                 if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
                 {
-                    using (var sr= new StreamWriter(dlg.FileName))
+                    using (var sr = new StreamWriter(dlg.FileName))
                     {
-                        foreach(string item in SourceFileListBox.Items)
+                        foreach (string item in SourceFileListBox.Items)
                         {
                             sr.WriteLine(item);
                         }
@@ -379,13 +386,25 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void LogButton_Click(object sender, RoutedEventArgs e)
         {
-            // ログウインドウをモーダル表示する
-            var win = new LogWindow();
-            if ( runner != null )
+            if (logWin == null || !logWin.IsLoaded)
             {
-                runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(win.ConvertStateChanged);
+                // ログウインドウをメインウインドウの下に表示する
+                logWin = new LogWindow();
+                if (runner != null)
+                {
+                    runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(logWin.ConvertStateChanged);
+                }
+                logWin.Owner = this;
+                logWin.Width = this.Width;
+                logWin.Top = this.Top + this.Height - 8;
+                logWin.Left = this.Left;
+                logWin.Show();
             }
-            win.ShowDialog();
+            else if (logWin != null)
+            {
+                // ウインドウがすでに開いている場合は閉じる
+                logWin.Close();
+            }
         }
 
         /// <summary>
@@ -397,14 +416,17 @@ namespace HandBrakeBatchRunner
         {
             // 設定ウインドウをモーダル表示する
             var win = new SettingWindow();
+            win.Owner = this;
+            win.Top = this.Top;
+            win.Left = this.Left;
             win.ShowDialog();
 
             // 監視設定画変更された場合に反映する
-            if(watcher.IsWatch && !settingManager.ConvertSettingBody.EnableAutoAdd)
+            if (watcher.IsWatch && !settingManager.ConvertSettingBody.EnableAutoAdd)
             {
                 watcher.Stop();
             }
-            else if(!watcher.IsWatch && settingManager.ConvertSettingBody.EnableAutoAdd)
+            else if (!watcher.IsWatch && settingManager.ConvertSettingBody.EnableAutoAdd)
             {
                 watcher.Start(settingManager.ConvertSettingBody.WatchFolder, settingManager.ConvertSettingBody.WatchPattern);
             }
@@ -438,7 +460,7 @@ namespace HandBrakeBatchRunner
             using (var dlg = new CommonOpenFileDialog("変換完了後格納フォルダを選んでください。"))
             {
                 dlg.IsFolderPicker = true;
-                if(!string.IsNullOrEmpty(CompleteFolderTextBox.Text)) dlg.InitialDirectory = CompleteFolderTextBox.Text;
+                if (!string.IsNullOrEmpty(CompleteFolderTextBox.Text)) dlg.InitialDirectory = CompleteFolderTextBox.Text;
                 if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
                 {
                     CompleteFolderTextBox.Text = dlg.FileName;
@@ -465,7 +487,7 @@ namespace HandBrakeBatchRunner
                 return;
             }
 
-            if(isStart)
+            if (isStart)
             {
                 ConvertStartButton.IsEnabled = false;
                 ConvertCancelNextButton.IsEnabled = true;
@@ -485,7 +507,7 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void SetStatus(ConvertStateChangedEventArgs e)
         {
-            SetStatus(e.AllProgress, e.AllStatus, e.FileProgress, e.FileStatus,e.SourceFilePath);
+            SetStatus(e.AllProgress, e.AllStatus, e.FileProgress, e.FileStatus, e.SourceFilePath);
         }
 
         /// <summary>
@@ -495,9 +517,9 @@ namespace HandBrakeBatchRunner
         /// <param name="allStatus"></param>
         /// <param name="fileProgress"></param>
         /// <param name="fileStatus"></param>
-        private void SetStatus(int allProgress,string allStatus,int fileProgress,string fileStatus,string sourceFilePath)
+        private void SetStatus(int allProgress, string allStatus, int fileProgress, string fileStatus, string sourceFilePath)
         {
-            if(Dispatcher.CheckAccess() == false)
+            if (Dispatcher.CheckAccess() == false)
             {
                 Dispatcher.Invoke((Action)(() =>
                 {
@@ -506,15 +528,15 @@ namespace HandBrakeBatchRunner
                 return;
             }
 
-            if (allProgress != 0)
+            if (allProgress != -1)
             {
                 AllProgress.Value = allProgress;
                 TaskbarManager.Instance.SetProgressValue(allProgress, 100);
             }
-            if (allStatus !=null) AllStatus.Content = allStatus;
-            if (fileProgress != 0) FileProgress.Value = fileProgress;
+            if (allStatus != null) AllStatus.Content = allStatus;
+            if (fileProgress != -1) FileProgress.Value = fileProgress;
             if (fileStatus != null) FileStatus.Content = fileStatus;
-            
+
             var selectItems = SourceFileListBox.SelectedItems.OfType<string>();
             if (!string.IsNullOrWhiteSpace(sourceFilePath) && (selectItems.Count() != 1 || selectItems.First() != sourceFilePath))
             {
@@ -539,16 +561,16 @@ namespace HandBrakeBatchRunner
             if (SettingCombo.SelectedItem == null)
             {
                 MessageBox.Show("変換設定が選ばれていません。", "HandBrakeBatchRunner", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;   
+                return false;
             }
-            
+
             if (string.IsNullOrWhiteSpace(DestinationFolderTextBox.Text))
             {
                 MessageBox.Show("変換先フォルダが選択されていません。", "HandBrakeBatchRunner", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
-            if ( File.Exists(settingManager.ConvertSettingBody.HandBrakeCLIFilePath) == false )
+            if (File.Exists(settingManager.ConvertSettingBody.HandBrakeCLIFilePath) == false)
             {
                 MessageBox.Show("HandbrakeCLIファイルが見つかりません。\r\n別途ダウンロードして任意の場所に格納します。格納した変換設定でHandbrakeCLIを指定してください。", "HandBrakeBatchRunner", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;

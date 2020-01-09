@@ -13,7 +13,7 @@ namespace HandBrakeBatchRunner.Convert
     /// <summary>
     /// MutexのDisposeサポートラッパークラス
     /// </summary>
-    class MutexWrapper: IDisposable
+    class MutexWrapper : IDisposable
     {
         /// <summary>
         /// 実インスタンス
@@ -78,10 +78,10 @@ namespace HandBrakeBatchRunner.Convert
         /// </remarks>
         public virtual Task<bool> WaitOne(int millisecondsTimeout, bool exitContext)
         {
-        	// 引数保存
+            // 引数保存
             this.millisecondsTimeoutParam = millisecondsTimeout;
             this.exitContextParam = exitContext;
-            
+
             if (mutexControll == null)
             {
                 mutexControll = Task.Factory.StartNew(() =>
@@ -104,35 +104,35 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         private void MutexControlTask()
         {
-            while(true)
+            while (true)
             {
-            	// 開放が始まっていたら終了
+                // 開放が始まっていたら終了
                 if (releaseEvent.IsSet) break;
-                
+
                 // Mutex取得開始まで待機(待ち続けると開放処理ができないので1secごとに待つ)
                 if (waitStartEvent.Wait(1000) == false) continue;
                 waitStartEvent.Reset();
 
-				// Mutex取得を行う
-                waitResult = instance.WaitOne(millisecondsTimeoutParam,exitContextParam);
+                // Mutex取得を行う
+                waitResult = instance.WaitOne(millisecondsTimeoutParam, exitContextParam);
                 waitEndEvent.Signal();
-                
+
                 // 取得できた時点で処理終了
-                if(waitResult) break;
+                if (waitResult) break;
             }
 
-			// 開放まで待機
+            // 開放まで待機
             releaseEvent.Wait();
             releaseEvent.Dispose();
 
-			// Mutex開放処理
+            // Mutex開放処理
             instance.ReleaseMutex();
             instance.Dispose();
             instance = null;
         }
 
         #region IDisposable Support
-        
+
         private bool disposedValue = false;
 
         protected virtual void Dispose(bool disposing)

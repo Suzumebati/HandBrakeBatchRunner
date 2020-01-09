@@ -24,7 +24,7 @@ namespace HandBrakeBatchRunner
         }
 
         /// <summary>
-        /// 変換ステータス変更イベント
+        /// 変換状態変更イベント
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -34,11 +34,16 @@ namespace HandBrakeBatchRunner
             {
                 Dispatcher.Invoke((Action)(() =>
                 {
-                    ConvertStateChanged(sender,e);
+                    ConvertStateChanged(sender, e);
                 }));
                 return;
             }
-            LogListBox.Items.Add(e.LogData);
+            // 進捗率以外のログ内容をウインドウに表示する
+            if (e.FileProgress == -1)
+            {
+                LogListBox.Items.Add(e.LogData);
+                LogListBox.ScrollIntoView(e.LogData);
+            }
         }
     }
 }
