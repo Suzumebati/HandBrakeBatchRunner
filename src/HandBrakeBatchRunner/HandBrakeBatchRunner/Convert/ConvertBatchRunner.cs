@@ -135,14 +135,24 @@ namespace HandBrakeBatchRunner.Convert
                     string currentSourceFilePath = SourceFileList[currentFileIndex];
                     var replaceParam = CreateReplaceParam(ConvertSettingName, currentSourceFilePath, DestinationFolder);
 
+                    // 変換開始時にステータス更新
+                    OnConvertStateChanged((int)(((double)currentFileIndex / SourceFileList.Count) * 100), 0,
+                        $"{currentFileIndex}/{SourceFileList.Count}", "スキャン中");
+
                     // 変換元が存在しない場合はスキップ
-                    if (File.Exists(currentSourceFilePath) == false) continue;
+                    if (File.Exists(currentSourceFilePath) == false)
+                    {
+                        LogWindow.LogMessage($"元ファイルが存在しないのでスキップします。 File={currentSourceFilePath}", LogWindow.MessageType.Warning);
+                        continue;
+                    }
 
                     // 変換先にすでにファイルが有る場合はスキップ
                     if (IsAlreadyExistCompleteFolder(replaceParam)) continue;
 
                     // 一個のファイルを変換する
+                    LogWindow.LogMessage($"Handbrakeで変換処理を開始します。 File={currentSourceFilePath}", LogWindow.MessageType.Information);
                     await contoller.ExecuteConvert(ConvertSetting, replaceParam);
+                    LogWindow.LogMessage($"Handbrakeで変換処理を終了しました。 Status={contoller.Status} File={currentSourceFilePath}", LogWindow.MessageType.Information);
 
                     if (contoller.Status == Constant.ConvertFileStatus.Completed)
                     {
@@ -163,14 +173,7 @@ namespace HandBrakeBatchRunner.Convert
             // イベントを発行
             if (!IsCancellationRequested && !IsCancellationNextRequested)
             {
-                var e = new ConvertStateChangedEventArgs
-                {
-                    AllProgress = 100,
-                    AllStatus = $"{SourceFileList.Count}/{SourceFileList.Count}",
-                    FileProgress = 100,
-                    FileStatus = "完了"
-                };
-                OnConvertStateChanged(e);
+                OnConvertStateChanged(100, 100, $"{SourceFileList.Count}/{SourceFileList.Count}", "完了");
             }
 
             contoller = null;
@@ -181,6 +184,7 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         public void CancelNextConvert()
         {
+            LogWindow.LogMessage($"次のファイルでキャンセルを受け付けました。", LogWindow.MessageType.Information);
             IsCancellationNextRequested = true;
         }
 
@@ -189,6 +193,7 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         public void CancelConvert()
         {
+            LogWindow.LogMessage($"キャンセルを受け付けました。", LogWindow.MessageType.Information);
             if (contoller != null && IsCancellationRequested == false)
             {
                 contoller.CancelConvert();
@@ -202,6 +207,7 @@ namespace HandBrakeBatchRunner.Convert
         /// <param name="sourceFileList"></param>
         public void ChangeSorceFileList(List<string> sourceFileList)
         {
+            LogWindow.LogMessage($"変換ファイルリストの変更を受け付けました。", LogWindow.MessageType.Information);
             var index = sourceFileList.IndexOf(currentFileName);
             if (index != -1 && index != currentFileIndex)
             {
@@ -242,10 +248,12 @@ namespace HandBrakeBatchRunner.Convert
             if (string.IsNullOrEmpty(dstFileName))
             {
                 // 変換後ファイル名が指定されていない場合は判断できないので存在しない扱いとする
+                LogWindow.LogMessage($"変換後ファイル名が指定されていないため変換済みチェックはしません。dstFileName={dstFileName}", LogWindow.MessageType.Warning);
                 return false;
             }
             else if (File.Exists(Path.Combine(DestinationFolder, dstFileName)))
             {
+                LogWindow.LogMessage($"変換後ファイルが既に存在するのでスキップします。File={Path.Combine(DestinationFolder, dstFileName)} ", LogWindow.MessageType.Warning);
                 return true;
             }
             else
@@ -276,10 +284,11 @@ namespace HandBrakeBatchRunner.Convert
                     try
                     {
                         File.Delete(dstFilePath);
+                        LogWindow.LogMessage($"未完了ファイルを削除しました。 File={dstFilePath}", LogWindow.MessageType.Information);
                     }
-                    catch (IOException)
+                    catch (IOException ex)
                     {
-
+                        LogWindow.LogMessage($"未完了ファイルの削除に失敗しました。 File={dstFilePath} ex={ex}", LogWindow.MessageType.Error);
                     }
                 });
             }
@@ -306,10 +315,11 @@ namespace HandBrakeBatchRunner.Convert
                     try
                     {
                         File.Move(currentSourceFilePath, compFilePath);
+                        LogWindow.LogMessage($"完了済みフォルダにファイル移動しました。 {currentSourceFilePath}->{compFilePath}", LogWindow.MessageType.Information);
                     }
-                    catch (IOException)
+                    catch (IOException ex)
                     {
-
+                        LogWindow.LogMessage($"完了済みフォルダへファイル移動に失敗しました。 {currentSourceFilePath}->{compFilePath} ex={ex}", LogWindow.MessageType.Error);
                     }
                 });
             }
@@ -343,18 +353,12 @@ namespace HandBrakeBatchRunner.Convert
                 }
                 else if (waitCount * Constant.MutexWaitIntervalMiliSecond > Constant.MutexWaitMaxMiliSecond)
                 {
+                    LogWindow.LogMessage($"変換完了待受の最大実効時間をオーバーしました。中断します。 runTime={waitCount}", LogWindow.MessageType.Error);
                     return false;
                 }
                 else
                 {
-                    var e = new ConvertStateChangedEventArgs
-                    {
-                        AllProgress = 0,
-                        AllStatus = $"0/{SourceFileList.Count}",
-                        FileProgress = 0,
-                        FileStatus = $"Wait {Math.Round((double)waitCount / 60, 0)}min"
-                    };
-                    OnConvertStateChanged(e);
+                    OnConvertStateChanged(0, 0, $"0/{SourceFileList.Count}", $"Wait {Math.Round((double)waitCount / 60, 0)}min");
                 }
             }
         }
@@ -374,6 +378,25 @@ namespace HandBrakeBatchRunner.Convert
             e.AllProgress = (int)(((double)currentFileIndex / SourceFileList.Count) * 100);
             e.AllStatus = $"{currentFileIndex}/{SourceFileList.Count}";
             e.SourceFilePath = SourceFileList[currentFileIndex];
+            OnConvertStateChanged(e);
+        }
+
+        /// <summary>
+        /// イベントを発生させる
+        /// </summary>
+        /// <param name="allProgress"></param>
+        /// <param name="fileProgress"></param>
+        /// <param name="allStatus"></param>
+        /// <param name="fileStatus"></param>
+        protected virtual void OnConvertStateChanged(int allProgress, int fileProgress, string allStatus, string fileStatus)
+        {
+            var e = new ConvertStateChangedEventArgs
+            {
+                AllProgress = allProgress,
+                AllStatus = allStatus,
+                FileProgress = fileProgress,
+                FileStatus = fileStatus
+            };
             OnConvertStateChanged(e);
         }
 

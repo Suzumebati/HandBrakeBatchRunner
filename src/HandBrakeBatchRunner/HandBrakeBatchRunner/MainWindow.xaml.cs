@@ -75,6 +75,38 @@ namespace HandBrakeBatchRunner
         }
 
         /// <summary>
+        /// ウインドウ位置変更イベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_LocationChanged(object sender, EventArgs e)
+        {
+            if (logWin != null)
+            {
+                // ログウィンドウを表示している場合はメインウインドウの下に移動する
+                logWin.Width = this.Width;
+                logWin.Top = this.Top + this.Height - 8;
+                logWin.Left = this.Left;
+            }
+        }
+
+        /// <summary>
+        /// ウインドウサイズ変更イベント
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (logWin != null)
+            {
+                // ログウィンドウを表示している場合はメインウインドウの下に移動する＋幅変更
+                logWin.Width = this.Width;
+                logWin.Top = this.Top + this.Height - 8;
+                logWin.Left = this.Left;
+            }
+        }
+
+        /// <summary>
         /// クローズ中イベント
         /// </summary>
         /// <param name="sender"></param>
@@ -190,6 +222,7 @@ namespace HandBrakeBatchRunner
         {
             // 入力チェック
             if (InputCheck() == false) return;
+            LogWindow.LogMessage($"変換開始しました。 Count={SourceFileListBox.Items.Count}", LogWindow.MessageType.Information);
 
             var setting = SettingCombo.SelectedItem as ConvertSettingItem;
 
@@ -207,7 +240,6 @@ namespace HandBrakeBatchRunner
             runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(ConvertStateChanged);
             if (logWin != null) runner.ConvertStateChangedEvent += new ConvertStateChangedHandler(logWin.ConvertStateChanged);
 
-
             // 一括変換開始
             await runner.BatchConvert();
 
@@ -218,6 +250,7 @@ namespace HandBrakeBatchRunner
                 SetStatus(100, $"{SourceFileListBox.Items.Count}/{SourceFileListBox.Items.Count}", 100, "完了", string.Empty);
             }
             TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
+            LogWindow.LogMessage($"変換終了しました。 Count={SourceFileListBox.Items.Count}", LogWindow.MessageType.Information);
             runner = null;
         }
 
@@ -230,9 +263,8 @@ namespace HandBrakeBatchRunner
         {
             if (runner?.IsCancellationNextRequested == false)
             {
-                runner.CancelNextConvert();
                 ConvertCancelNextButton.IsEnabled = false;
-                ConvertCancelButton.IsEnabled = false;
+                runner.CancelNextConvert();
             }
         }
 
@@ -245,8 +277,9 @@ namespace HandBrakeBatchRunner
         {
             if (runner?.IsCancellationRequested == false)
             {
-                runner.CancelConvert();
                 ConvertCancelButton.IsEnabled = false;
+                ConvertCancelNextButton.IsEnabled = false;
+                runner.CancelConvert();
             }
         }
 
@@ -306,6 +339,7 @@ namespace HandBrakeBatchRunner
         private void ClearFileList_Click(object sender, RoutedEventArgs e)
         {
             SourceFileListBox.Items.Clear();
+            LogWindow.LogMessage($"ファイルリストをクリアしました。 Count={SourceFileListBox.Items.Count}", LogWindow.MessageType.Information);
         }
 
         /// <summary>
@@ -324,6 +358,7 @@ namespace HandBrakeBatchRunner
                 {
                     runner.ChangeSorceFileList(SourceFileListBox.Items.OfType<string>().ToList());
                 }
+                LogWindow.LogMessage($"選択ファイルを削除しました。 Count={SourceFileListBox.SelectedItems.Count}", LogWindow.MessageType.Information);
             }
         }
 
@@ -346,6 +381,7 @@ namespace HandBrakeBatchRunner
                             sr.WriteLine(item);
                         }
                     }
+                    LogWindow.LogMessage($"ファイルリストを保存しました。File={dlg.FileName}", LogWindow.MessageType.Information);
                 }
             }
         }
@@ -371,6 +407,7 @@ namespace HandBrakeBatchRunner
                             SourceFileListBox.Items.Add(line);
                         }
                     }
+                    LogWindow.LogMessage($"ファイルリストを読込ました。File={dlg.FileName}", LogWindow.MessageType.Information);
                 }
             }
             if (runner != null)
@@ -414,12 +451,14 @@ namespace HandBrakeBatchRunner
         /// <param name="e"></param>
         private void ConvertSetting_Click(object sender, RoutedEventArgs e)
         {
+            LogWindow.LogMessage($"設定ウインドウを表示します。", LogWindow.MessageType.Information);
             // 設定ウインドウをモーダル表示する
             var win = new SettingWindow();
             win.Owner = this;
             win.Top = this.Top;
             win.Left = this.Left;
             win.ShowDialog();
+            LogWindow.LogMessage($"設定ウインドウを閉じました。", LogWindow.MessageType.Information);
 
             // 監視設定画変更された場合に反映する
             if (watcher.IsWatch && !settingManager.ConvertSettingBody.EnableAutoAdd)

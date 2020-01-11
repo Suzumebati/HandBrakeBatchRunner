@@ -77,6 +77,7 @@ namespace HandBrakeBatchRunner.Convert
         /// <param name="replaceParam"></param>
         public async Task ExecuteConvert(ConvertSettingItem setting, Dictionary<string, string> replaceParam)
         {
+            Status = Constant.ConvertFileStatus.NotRuning;
             //Processオブジェクトを作成
             using (Process proc = new Process())
             {
@@ -89,8 +90,6 @@ namespace HandBrakeBatchRunner.Convert
 
                 startInfo.RedirectStandardOutput = true;
                 startInfo.RedirectStandardError = true;
-                //startInfo.StandardErrorEncoding = Encoding.UTF8;
-                //startInfo.StandardOutputEncoding = Encoding.UTF8;
 
                 proc.OutputDataReceived += new DataReceivedEventHandler(OutputDataReceived);
                 proc.ErrorDataReceived += new DataReceivedEventHandler(OutputDataReceived);
@@ -98,7 +97,7 @@ namespace HandBrakeBatchRunner.Convert
                 Status = Constant.ConvertFileStatus.Running;
 
                 // 非同期実行開始
-                ProcessResult result = await ExecuteConvertCommand(proc, Constant.ProcessWaitMaxMiliSecond);
+                ProcessResult result = await ExecuteConvertCommand(proc, Constant.ProcessWaitMaxMiliSecond, replaceParam);
                 Status = result.Status;
             }
         }
@@ -119,8 +118,9 @@ namespace HandBrakeBatchRunner.Convert
         /// </summary>
         /// <param name="proc"></param>
         /// <param name="timeout"></param>
+        /// <param name="replaceParam"></param>
         /// <returns>非同期タスク　プロセス実行結果</returns>
-        protected virtual async Task<ProcessResult> ExecuteConvertCommand(Process proc, int timeout)
+        protected virtual async Task<ProcessResult> ExecuteConvertCommand(Process proc, int timeout, Dictionary<string, string> replaceParam)
         {
             ProcessResult result = new ProcessResult();
             bool isStarted;
@@ -130,12 +130,12 @@ namespace HandBrakeBatchRunner.Convert
                 // プロセス実行開始
                 isStarted = proc.Start();
             }
-            catch (Exception error)
+            catch (Exception ex)
             {
                 result.Status = Constant.ConvertFileStatus.NotRuning;
                 result.ExitCode = -1;
                 result.ErrorMessage = error.Message;
-
+                LogWindow.LogMessage($"Handbrakeが実行できませんでした。 ex={ex} File={replaceParam["{SOURCE_FILE_PATH}"]}", LogWindow.MessageType.Error);
                 isStarted = false;
             }
 
@@ -156,6 +156,7 @@ namespace HandBrakeBatchRunner.Convert
                     {
                         // プロセスが完了した場合
                         result.ExitCode = proc.ExitCode;
+                        LogWindow.LogMessage($"Handbrakeの実行が完了しました。 ExitCode={result.ExitCode} File={replaceParam["{SOURCE_FILE_PATH}"]}", LogWindow.MessageType.Information);
                         switch (result.ExitCode)
                         {
                             case 0:
@@ -169,6 +170,7 @@ namespace HandBrakeBatchRunner.Convert
                     }
                     else if (tokenSource.Token.IsCancellationRequested)
                     {
+                        LogWindow.LogMessage($"Handbrakeのプロセスを停止します。File={replaceParam["{SOURCE_FILE_PATH}"]}", LogWindow.MessageType.Warning);
                         // キャンセルがされた場合
                         try
                         {
@@ -182,6 +184,7 @@ namespace HandBrakeBatchRunner.Convert
                     }
                     else if (runTime > timeout)
                     {
+                        LogWindow.LogMessage($"Handbrakeの最大実行時間をオーバーしました。File={replaceParam["{SOURCE_FILE_PATH}"]} runTime={runTime}", LogWindow.MessageType.Error);
                         // タイムアウトをオーバーした場合
                         try
                         {

@@ -1,16 +1,21 @@
-﻿<Window x:Class="HandBrakeBatchRunner.SettingWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:HandBrakeBatchRunner"
-        mc:Ignorable="d"
-        xmlns:setting="clr-namespace:HandBrakeBatchRunner.Setting"
-        DataContext="{x:Static setting:ConvertSettingManager.Current}"
-        Title="SettingWindow" Height="450" Width="800" Closing="Window_Closing" Deactivated="Window_Deactivated">
+﻿<Window
+    x:Class="HandBrakeBatchRunner.SettingWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:HandBrakeBatchRunner"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:setting="clr-namespace:HandBrakeBatchRunner.Setting"
+    Title="SettingWindow"
+    Width="800"
+    Height="450"
+    Closing="Window_Closing"
+    DataContext="{x:Static setting:ConvertSettingManager.Current}"
+    Deactivated="Window_Deactivated"
+    mc:Ignorable="d">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="110"/>
+            <ColumnDefinition Width="110" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="100" />
         </Grid.ColumnDefinitions>
@@ -24,60 +29,199 @@
             <RowDefinition Height="34" />
             <RowDefinition Height="34" />
         </Grid.RowDefinitions>
-        <Label Content="HandBrakeCLIパス" Grid.Column="0" VerticalAlignment="Center" Margin="2,0,0,0"/>
-        <TextBox Name="HandBrakeCLIFilePath" Grid.Column="1" Text="{Binding ConvertSettingBody.HandBrakeCLIFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Margin="2,2,2,2"/>
-        <Button Content="..." Grid.Column="2" VerticalAlignment="Center" Click="OpenFileButton_Click" Margin="5,0,5,0" Height="30" />
+        <Label
+            Grid.Column="0"
+            Margin="2,0,0,0"
+            VerticalAlignment="Center"
+            Content="HandBrakeCLIパス" />
+        <TextBox
+            Name="HandBrakeCLIFilePath"
+            Grid.Column="1"
+            Margin="2,2,2,2"
+            Text="{Binding ConvertSettingBody.HandBrakeCLIFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            TextWrapping="Wrap" />
+        <Button
+            Grid.Column="2"
+            Height="30"
+            Margin="5,0,5,0"
+            VerticalAlignment="Center"
+            Click="OpenFileButton_Click"
+            Content="..." />
 
-        <Label Content="変換追加名" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
-        <TextBox Name="NewSettingTextBox" Grid.Column="1" Grid.Row="1" Margin="2,2,2,2"/>
-        <Button Grid.Column="2" Grid.Row="1" Content="追加" Height="30" Margin="5,2,5,2" Click="AddSettingButton_Click" />
+        <Label
+            Grid.Row="1"
+            Grid.Column="0"
+            Margin="2,0,0,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Content="変換追加名" />
+        <TextBox
+            Name="NewSettingTextBox"
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="2,2,2,2" />
+        <Button
+            Grid.Row="1"
+            Grid.Column="2"
+            Height="30"
+            Margin="5,2,5,2"
+            Click="AddSettingButton_Click"
+            Content="追加" />
 
-        <Label Content="変換設定名" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
-        <ListBox Name="ConvertSettingListBox" Grid.Column="1" Grid.Row="2" VerticalAlignment="Stretch" ItemsSource="{Binding}" Margin="2,2,2,2" SelectionChanged="ConvertSettingListBox_SelectionChanged" >
+        <Label
+            Grid.Row="2"
+            Grid.Column="0"
+            Margin="2,0,0,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Content="変換設定名" />
+        <ListBox
+            Name="ConvertSettingListBox"
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="2,2,2,2"
+            VerticalAlignment="Stretch"
+            ItemsSource="{Binding}"
+            SelectionChanged="ConvertSettingListBox_SelectionChanged">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding ConvertSettingName}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding ConvertSettingName}" TextTrimming="CharacterEllipsis" />
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Button Content="削除" Grid.Column="2" Grid.Row="2" Height="30" Margin="5,5,5,5" Click="DeleteSettingButton_Click" VerticalAlignment="Top"/>
+        <Button
+            Grid.Row="2"
+            Grid.Column="2"
+            Height="30"
+            Margin="5,5,5,5"
+            VerticalAlignment="Top"
+            Click="DeleteSettingButton_Click"
+            Content="削除" />
 
-        <Label Content="変換コマンド" Grid.Column="0" Grid.Row="3" HorizontalAlignment="Stretch"  VerticalAlignment="Center" Margin="2,0,0,0"/>
-        <TextBox Name="CommandTemplateText" Grid.Column="1" Grid.Row="3" Text="" TextWrapping="WrapWithOverflow" AutoWordSelection="True" VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Margin="2,2,2,2" GotFocus="CommandTemplateText_GotFocus" LostFocus="CommandTemplateText_LostFocus"/>
-        <Popup Name="CommandTemplateSupplementPopUp" PopupAnimation="Fade" AllowsTransparency="True" PlacementTarget="{Binding ElementName=CommandTemplateText}">
-            <TextBox Width="450" Height="150" IsReadOnly="True" GotFocus="CommandTemplateSupplementPopUp_GotFocus" LostFocus="CommandTemplateSupplementPopUp_LostFocus" Text="HandBrakeCLIのコマンド引数を設定します。&#xa;以下の変数を使用可能です。&#xa;{CONVERT_SETTING_NAME}=選択された変換設定名&#xa;{SOURCE_FILE_PATH}=選変換元ファイルパス&#xa;{SOURCE_FILE_NAME}=変換元ファイル名&#xa;{SOURCE_FILE_NAME_WITHOUT_EXTENSION}=変換元ファイル名(拡張子を除く)&#xa;{DST_FOLDER}=変換先フォルダパス">
+        <Label
+            Grid.Row="3"
+            Grid.Column="0"
+            Margin="2,0,0,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Content="変換コマンド" />
+        <TextBox
+            Name="CommandTemplateText"
+            Grid.Row="3"
+            Grid.Column="1"
+            Margin="2,2,2,2"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch"
+            AutoWordSelection="True"
+            GotFocus="CommandTemplateText_GotFocus"
+            LostFocus="CommandTemplateText_LostFocus"
+            Text=""
+            TextWrapping="WrapWithOverflow"
+            VerticalScrollBarVisibility="Auto" />
+        <Popup
+            Name="CommandTemplateSupplementPopUp"
+            AllowsTransparency="True"
+            PlacementTarget="{Binding ElementName=CommandTemplateText}"
+            PopupAnimation="Fade">
+            <TextBox
+                Width="450"
+                Height="150"
+                GotFocus="CommandTemplateSupplementPopUp_GotFocus"
+                IsReadOnly="True"
+                LostFocus="CommandTemplateSupplementPopUp_LostFocus"
+                Text="HandBrakeCLIのコマンド引数を設定します。&#xa;以下の変数を使用可能です。&#xa;{CONVERT_SETTING_NAME}=選択された変換設定名&#xa;{SOURCE_FILE_PATH}=選変換元ファイルパス&#xa;{SOURCE_FILE_NAME}=変換元ファイル名&#xa;{SOURCE_FILE_NAME_WITHOUT_EXTENSION}=変換元ファイル名(拡張子を除く)&#xa;{DST_FOLDER}=変換先フォルダパス">
                 <TextBox.Template>
                     <ControlTemplate TargetType="{x:Type TextBoxBase}">
                         <Grid Background="Transparent">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="10" />
-                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <Path Grid.Row="0" Data="M50,10 L60,0 70,10 " Stroke="{TemplateBinding BorderBrush}"/>
-                            <Polygon Grid.Row="0" Points="50,10 60,0 70,10" Fill="{TemplateBinding Background}" />
-                            <Border Grid.Row="1" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
-                                <ScrollViewer x:Name="PART_ContentHost"/>
+                            <Path
+                                Grid.Row="0"
+                                Data="M50,10 L60,0 70,10 "
+                                Stroke="{TemplateBinding BorderBrush}" />
+                            <Polygon
+                                Grid.Row="0"
+                                Fill="{TemplateBinding Background}"
+                                Points="50,10 60,0 70,10" />
+                            <Border
+                                Grid.Row="1"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                                <ScrollViewer x:Name="PART_ContentHost" />
                             </Border>
                         </Grid>
                     </ControlTemplate>
                 </TextBox.Template>
             </TextBox>
         </Popup>
-        <Label Content="変換後ファイル名" Grid.Column="0" Grid.Row="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
-        <TextBox Name="DestinationFileTemplateTextBox" Grid.Column="1" Grid.Row="4" Margin="2,2,2,2"/>
+        <Label
+            Grid.Row="4"
+            Grid.Column="0"
+            Margin="2,0,0,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Content="変換後ファイル名" />
+        <TextBox
+            Name="DestinationFileTemplateTextBox"
+            Grid.Row="4"
+            Grid.Column="1"
+            Margin="2,2,2,2" />
 
-        <Label Content="監視フォルダ" Grid.Column="0" Grid.Row="5" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
-        <TextBox Name="WatchFolderTextBox" Grid.Column="1" Grid.Row="5" Margin="2,2,2,2" Text="{Binding ConvertSettingBody.WatchFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-        <Button Content="..." Grid.Column="2" Grid.Row="5" VerticalAlignment="Center" Click="WatchFolderButton_Click" Margin="5,0,5,0" Height="30" />
+        <Label
+            Grid.Row="5"
+            Grid.Column="0"
+            Margin="2,0,0,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Content="監視フォルダ" />
+        <TextBox
+            Name="WatchFolderTextBox"
+            Grid.Row="5"
+            Grid.Column="1"
+            Margin="2,2,2,2"
+            Text="{Binding ConvertSettingBody.WatchFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <Button
+            Grid.Row="5"
+            Grid.Column="2"
+            Height="30"
+            Margin="5,0,5,0"
+            VerticalAlignment="Center"
+            Click="WatchFolderButton_Click"
+            Content="..." />
 
-        <Label Content="監視ファイルパターン" Grid.Column="0" Grid.Row="6" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="2,0,0,0"/>
-        <TextBox Name="WatchFilePatternTextBox" Text="{Binding ConvertSettingBody.WatchPattern, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="1" Grid.Row="6" Margin="2,2,2,2"/>
-        
-        <StackPanel Orientation="Horizontal" Grid.Column="0" Grid.Row="7" Grid.ColumnSpan="3">
-            <CheckBox Margin="10,2,10,2" VerticalAlignment="Center" IsChecked="{Binding ConvertSettingBody.EnableAutoAdd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+        <Label
+            Grid.Row="6"
+            Grid.Column="0"
+            Margin="2,0,0,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Center"
+            Content="監視ファイルパターン" />
+        <TextBox
+            Name="WatchFilePatternTextBox"
+            Grid.Row="6"
+            Grid.Column="1"
+            Margin="2,2,2,2"
+            Text="{Binding ConvertSettingBody.WatchPattern, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+        <StackPanel
+            Grid.Row="7"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Orientation="Horizontal">
+            <CheckBox
+                Margin="10,2,10,2"
+                VerticalAlignment="Center"
+                IsChecked="{Binding ConvertSettingBody.EnableAutoAdd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                 監視フォルダのファイルを自動で追加する
             </CheckBox>
-            <CheckBox Margin="10,2,10,2" VerticalAlignment="Center" IsChecked="{Binding ConvertSettingBody.EnableAutoConvert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+            <CheckBox
+                Margin="10,2,10,2"
+                VerticalAlignment="Center"
+                IsChecked="{Binding ConvertSettingBody.EnableAutoConvert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                 ファイル追加時に自動で変換を実行する
             </CheckBox>
         </StackPanel>

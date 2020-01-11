@@ -58,7 +58,7 @@ namespace HandBrakeBatchRunner.FileWatcher
             // ファイルチェック開始
             Task.Factory.StartNew(() =>
             {
-                FileCheckThread();
+                FileCheckTask();
             }, TaskCreationOptions.LongRunning);
 
             // ファイルの変更イベント開始
@@ -91,7 +91,7 @@ namespace HandBrakeBatchRunner.FileWatcher
         /// <summary>
         /// ファイルのチェックスレッド
         /// </summary>
-        public async void FileCheckThread()
+        public async void FileCheckTask()
         {
             while (true)
             {
@@ -114,6 +114,7 @@ namespace HandBrakeBatchRunner.FileWatcher
                         {
                             addFilePathList.Add(filePath);
                             delCheckFilePathList.Add(filePath);
+                            LogWindow.LogMessage($"監視フォルダ内のファイルが変換可能になりました。 File={filePath}", LogWindow.MessageType.Information);
                         }
                     }
                     // 追加可能となったものはチェック対象から削除
@@ -164,6 +165,7 @@ namespace HandBrakeBatchRunner.FileWatcher
                 if (checkFilePathList.IndexOf(e.FullPath) == -1)
                 {
                     checkFilePathList.Add(e.FullPath);
+                    LogWindow.LogMessage($"監視フォルダ内にファイルが追加されました。 File={e.FullPath}", LogWindow.MessageType.Information);
                 }
             }
         }

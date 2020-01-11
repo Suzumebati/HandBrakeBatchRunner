@@ -97,6 +97,7 @@ namespace HandBrakeBatchRunner
             if (string.IsNullOrWhiteSpace(NewSettingTextBox.Text) == false && ConvertSettingManager.Current.GetSetting(NewSettingTextBox.Text) == null)
             {
                 ConvertSettingManager.Current.SetSetting(NewSettingTextBox.Text, string.Empty);
+                LogWindow.LogMessage($"変換設定を追加しました。設定名={NewSettingTextBox.Text}", LogWindow.MessageType.Information);
             }
             NewSettingTextBox.Text = string.Empty;
         }
@@ -112,6 +113,7 @@ namespace HandBrakeBatchRunner
             {
                 var selectedSetting = ConvertSettingListBox.SelectedItem as ConvertSettingItem;
                 ConvertSettingManager.Current.DeleteSetting(selectedSetting.ConvertSettingName);
+                LogWindow.LogMessage($"変換設定を削除しました。設定名={selectedSetting.ConvertSettingName}", LogWindow.MessageType.Information);
             }
         }
 
