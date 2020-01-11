@@ -134,7 +134,7 @@ namespace HandBrakeBatchRunner.Convert
             {
                 result.Status = Constant.ConvertFileStatus.NotRuning;
                 result.ExitCode = -1;
-                result.ErrorMessage = error.Message;
+                result.ErrorMessage = ex.Message;
                 LogWindow.LogMessage($"Handbrakeが実行できませんでした。 ex={ex} File={replaceParam["{SOURCE_FILE_PATH}"]}", LogWindow.MessageType.Error);
                 isStarted = false;
             }
