@@ -576,12 +576,15 @@ namespace HandBrakeBatchRunner
             if (fileProgress != -1) FileProgress.Value = fileProgress;
             if (fileStatus != null) FileStatus.Content = fileStatus;
 
-            var selectItems = SourceFileListBox.SelectedItems.OfType<string>();
-            if (!string.IsNullOrWhiteSpace(sourceFilePath) && (selectItems.Count() != 1 || selectItems.First() != sourceFilePath))
+            if (SourceFileListBox.IsFocused == false)
             {
-                SourceFileListBox.SelectedItems.Clear();
-                SourceFileListBox.SelectedItem = sourceFilePath;
-                SourceFileListBox.ScrollIntoView(sourceFilePath);
+                var selectItems = SourceFileListBox.SelectedItems.OfType<string>();
+                if (!string.IsNullOrWhiteSpace(sourceFilePath) && (selectItems.Count() != 1 || selectItems.First() != sourceFilePath))
+                {
+                    SourceFileListBox.SelectedItems.Clear();
+                    SourceFileListBox.SelectedItem = sourceFilePath;
+                    SourceFileListBox.ScrollIntoView(sourceFilePath);
+                }
             }
         }
 
