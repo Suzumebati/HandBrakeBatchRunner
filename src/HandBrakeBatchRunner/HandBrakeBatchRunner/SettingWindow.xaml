@@ -143,10 +143,12 @@
                                 Stroke="{TemplateBinding BorderBrush}" />
                             <Polygon
                                 Grid.Row="0"
+                                Panel.ZIndex="1"
                                 Fill="{TemplateBinding Background}"
                                 Points="50,10 60,0 70,10" />
                             <Border
                                 Grid.Row="1"
+                                Margin="0,-1,0,0"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
