@@ -97,6 +97,17 @@ namespace HandBrakeBatchRunner.Setting
         }
 
         /// <summary>
+        /// 起動時にファイル追加するかどうか
+        /// </summary>
+        [DataMember]
+        private bool _EnableFileAddOnStartup;
+        public bool EnableFileAddOnStartup
+        {
+            get { return _EnableFileAddOnStartup; }
+            set { SetProperty(ref _EnableFileAddOnStartup, value); }
+        }
+
+        /// <summary>
         /// 選んでいる変換後フォルダ設定
         /// </summary>
         [DataMember]

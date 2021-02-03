@@ -3,6 +3,7 @@
 // copyright twitter suzumebati(@suzumebati5)
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -60,7 +61,7 @@ namespace HandBrakeBatchRunner
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // バインド
             SettingCombo.ItemsSource = settingManager.ConvertSettingList;
@@ -70,6 +71,12 @@ namespace HandBrakeBatchRunner
             if (settingManager.ConvertSettingBody.EnableAutoAdd &&
                 string.IsNullOrWhiteSpace(settingManager.ConvertSettingBody.WatchFolder) == false)
             {
+                // 起動時に監視フォルダのファイル追加オプションが有効な場合
+                if (settingManager.ConvertSettingBody.EnableFileAddOnStartup)
+                {
+                    await watcher.AddFiles(settingManager.ConvertSettingBody.WatchFolder, settingManager.ConvertSettingBody.WatchPattern);
+                }
+                // 監視開始
                 watcher.Start(settingManager.ConvertSettingBody.WatchFolder, settingManager.ConvertSettingBody.WatchPattern);
             }
         }
@@ -309,10 +316,16 @@ namespace HandBrakeBatchRunner
                 return;
             }
 
-            if (settingManager.ConvertSettingBody.EnableAutoAdd)
+            if (settingManager.ConvertSettingBody.EnableAutoAdd || settingManager.ConvertSettingBody.EnableFileAddOnStartup)
             {
                 // 自動追加が有効な場合はファイルリストに追加
-                e.FileList.ForEach(item => SourceFileListBox.Items.Add(item));
+                e.FileList.ForEach(item =>
+                {
+                    if (SourceFileListBox.Items.IndexOf(item) == -1)
+                    {
+                        SourceFileListBox.Items.Add(item);
+                    }
+                });
                 SourceFileListBox.ScrollIntoView(e.FileList.Last());
             }
 
@@ -449,7 +462,7 @@ namespace HandBrakeBatchRunner
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ConvertSetting_Click(object sender, RoutedEventArgs e)
+        private async void ConvertSetting_Click(object sender, RoutedEventArgs e)
         {
             LogWindow.LogMessage($"設定ウインドウを表示します。", LogWindow.MessageType.Information);
             // 設定ウインドウをモーダル表示する
@@ -465,9 +478,19 @@ namespace HandBrakeBatchRunner
             {
                 watcher.Stop();
             }
-            else if (!watcher.IsWatch && settingManager.ConvertSettingBody.EnableAutoAdd)
+
+            if (string.IsNullOrWhiteSpace(settingManager.ConvertSettingBody.WatchFolder) == false)
             {
-                watcher.Start(settingManager.ConvertSettingBody.WatchFolder, settingManager.ConvertSettingBody.WatchPattern);
+                // スタートアップ時にファイル追加するオプションが選ばれている場合はファイル追加を実行する
+                if (settingManager.ConvertSettingBody.EnableFileAddOnStartup)
+                {
+                    await watcher.AddFiles(settingManager.ConvertSettingBody.WatchFolder, settingManager.ConvertSettingBody.WatchPattern);
+                }
+
+                if (!watcher.IsWatch && settingManager.ConvertSettingBody.EnableAutoAdd)
+                {
+                    watcher.Start(settingManager.ConvertSettingBody.WatchFolder, settingManager.ConvertSettingBody.WatchPattern);
+                }
             }
         }
 
