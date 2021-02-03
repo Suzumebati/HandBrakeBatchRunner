@@ -226,6 +226,12 @@
                 IsChecked="{Binding ConvertSettingBody.EnableAutoConvert, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                 ファイル追加時に自動で変換を実行する
             </CheckBox>
+            <CheckBox
+                Margin="10,2,10,2"
+                VerticalAlignment="Center"
+                IsChecked="{Binding ConvertSettingBody.EnableFileAddOnStartup, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                起動時に監視フォルダのファイルを追加する
+            </CheckBox>
         </StackPanel>
 
     </Grid>

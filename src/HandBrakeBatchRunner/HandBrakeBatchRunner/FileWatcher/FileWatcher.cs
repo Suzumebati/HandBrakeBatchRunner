@@ -71,6 +71,28 @@ namespace HandBrakeBatchRunner.FileWatcher
         }
 
         /// <summary>
+        /// 指定フォルダのファイル追加処理
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="filter"></param>
+        public async Task AddFiles(string path, string filter)
+        {
+            await Task.Run(() =>
+            {
+                IEnumerable<string> filePaths = Directory.EnumerateFiles(path, string.IsNullOrWhiteSpace(filter) ? "*.*" : filter, SearchOption.TopDirectoryOnly);
+                // ファイル追加イベント発行
+                if (filePaths.Count() > 0)
+                {
+                    var e = new FileAddedEventArgs
+                    {
+                        FileList = filePaths.ToList()
+                    };
+                    OnFileAdded(e);
+                }
+            });
+        }
+
+        /// <summary>
         /// 監視を終了する
         /// </summary>
         public void Stop()
